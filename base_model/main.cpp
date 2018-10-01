@@ -7,6 +7,8 @@
 #include <cmath>
 #include <ctime>
 
+#define PR(x) cout << #x << ": " << x << endl;
+
 using namespace std;
 
 #define LARGE 200001
