@@ -15,6 +15,8 @@ using namespace std;
 #define COMPILE false
 #define TESTTIME false
 
+// define initial parameters here
+int T = 0;
 int ini_array[LARGE], sum_array[LARGE];
 
 void printf_array(void* a, int num, char* name, char* type="int") {
@@ -37,7 +39,6 @@ int main(int argc, char** argv) {
   if (2 < argc) def_ofn = argv[2];
   freopen(def_ifn, "r", stdin);
   freopen(def_ofn, "w", stdout);
-  int T = 0;
   scanf("%d", &T);
   if (COMPILE) printf("Get T: %d\n", T);
   int i = 0;
