@@ -18,6 +18,7 @@ struct classcomp {
 }cc;
 
 int main () {
+  printf("size of long double: %d\n", sizeof(long long double));
   vector<Test> v;
   map<Test, int, classcomp> m;
   Test t;

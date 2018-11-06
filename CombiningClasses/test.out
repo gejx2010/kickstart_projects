@@ -1,0 +1,148 @@
+L[0]: 3, R[0]: 4
+L[1]: 2, R[1]: 8
+L[2]: 4, R[2]: 8
+L[3]: 1, R[3]: 3
+L[4]: 7, R[4]: 9
+Z[0]: 5
+mmin: 1
+mmax: 9
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 6
+r: 9
+mid: 7
+left: 5
+fn: 7
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 6
+r: 9
+mid: 7
+left: 5
+Case #1: 7
+L[0]: 3, R[0]: 4
+L[1]: 2, R[1]: 8
+L[2]: 4, R[2]: 8
+L[3]: 1, R[3]: 3
+L[4]: 7, R[4]: 9
+Z[0]: 5
+Z[1]: 9
+Z[2]: 29
+Z[3]: 15
+Z[4]: 41
+mmin: 1
+mmax: 9
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 6
+r: 9
+mid: 7
+left: 5
+fn: 7
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 6
+r: 9
+mid: 7
+left: 5
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 1
+r: 4
+mid: 2
+left: 18
+l: 3
+r: 4
+mid: 3
+left: 15
+fn: 5
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 1
+r: 4
+mid: 2
+left: 18
+l: 3
+r: 4
+mid: 3
+left: 15
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 1
+r: 4
+mid: 2
+left: 18
+fn: 0
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 1
+r: 4
+mid: 2
+left: 18
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 1
+r: 4
+mid: 2
+left: 18
+l: 3
+r: 4
+mid: 3
+left: 15
+fn: 3
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 1
+r: 4
+mid: 2
+left: 18
+l: 3
+r: 4
+mid: 3
+left: 15
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 1
+r: 4
+mid: 2
+left: 18
+fn: 0
+l: 1
+r: 9
+mid: 5
+left: 10
+l: 1
+r: 4
+mid: 2
+left: 18
+Case #2: 29
+L[0]: 1, R[0]: 1
+Z[0]: 1
+Z[1]: 2
+mmin: 1
+mmax: 1
+fn: 0
+fn: 0
+Case #3: 0
