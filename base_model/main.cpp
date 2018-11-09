@@ -7,9 +7,11 @@
 #include <cmath>
 #include <ctime>
 #include <map>
+#include <stack>
 #include <cassert>
 
 #define PR(x) cout << #x << ": " << x << endl;
+#define mp(x, y) make_pair(x, y)
 
 using namespace std;
 
