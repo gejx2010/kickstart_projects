@@ -6,8 +6,6 @@
 #include <algorithm>
 #include <cmath>
 #include <ctime>
-#include <map>
-#include <cassert>
 
 #define PR(x) cout << #x << ": " << x << endl;
 
