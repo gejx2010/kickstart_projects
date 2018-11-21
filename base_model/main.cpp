@@ -8,10 +8,16 @@
 #include <ctime>
 #include <map>
 #include <stack>
+#include <queue>
 #include <cassert>
 
-#define PR(x) cout << #x << ": " << x << endl;
-#define mp(x, y) make_pair(x, y)
+#define PR(x) cerr << #x << ": " << x << endl;
+#define PRV(x) cerr << #x << ": "; for (auto& x##_it: x) cerr << x##_it << ' '; cerr << endl;
+#define debug(...) fprintf(stderr, __VA_ARGS__)
+#define rep(i, a, b) for (int i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define mp make_pair
+#define mt make_tuple
+#define pb push_back
 
 using namespace std;
 
@@ -47,6 +53,8 @@ int main(int argc, char** argv) {
   scanf("%d", &T);
   if (COMPILE) printf("Get T: %d\n", T);
   int i = 0;
+  vector<int> n = {1, 2, 3};
+  PRV(n);
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) printf("With Case %d.\n", i);
@@ -57,3 +65,4 @@ int main(int argc, char** argv) {
   }
   return 0;
 }
+
