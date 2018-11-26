@@ -8,16 +8,19 @@
 #include <ctime>
 #include <stack>
 #include <map>
+#include <bitset>
 
-#define PR(x) cout << #x << ": " << x << endl;
+#define PR(x) cerr << #x << ": " << x << endl;
 #define mp make_pair
 #define mt make_tuple
 #define pb push_back
+#define PRV(x) cerr << #x << ": " << endl; for (auto& it: (x)) { cerr << (it) << " "; } \
+    cerr << endl;
 
 using namespace std;
 
 #define LARGE 1000
-#define COMPILE true
+#define COMPILE false
 #define TESTTIME false
 
 // define initial parameters here
@@ -25,7 +28,16 @@ int T = 0;
 int N, M, E, SR, SC, TR, TC;
 int ini_array[LARGE][LARGE];
 int trace[LARGE][LARGE];
-map<pair<int, int>, int> untrack_map;
+int vrank;
+int erank;
+int mask;
+const int MASK_LEN = 17;
+map<pair<int, int>, int> key_map;
+map<pair<int,int>, int> tr;
+map<int, pair<int, int>> pos_map;
+map<int, int> leave_energy;
+map<int, int> reach_target;
+map<int, int> mask_traced;
 
 void printf_array(void* a, int num, char* name, char* type="int") {
   printf("Begin print content of %s:\n", name);
@@ -74,67 +86,69 @@ vector< pair<int, int> > direction(int r, int l) {
   return res;
 }
 
-int trace_full(bool& rt, int r, int l, vector<pair<int, int>> &ca, decltype(untrack_map) &um) {
+int trace_full(int mask, int r, int l, vector<pair<int, int>> &ca, map<pair<int, int>, int> &tr) {
+  int pot = 0;
   if (is_target(r, l)) {
     if(COMPILE) printf("At (%d, %d), result reach.\n", r, l);
-    reach_target = true;
+    reach_target[mask] = 1;
   }
   for (auto& dir: direction(r, l)) {
     if (is_obstacle(dir.first, dir.second)) {
       continue;
-    } else if (is_trap(dir.first, dir.second)) {
-      if (is_traced(dir.first, dir.second)) {
-        um.erase(mp(dir.first, dir.second));
-      } else {
-        tr.pb(mp(dir.first, dir.second));
-        um[mt(ini_array[dir.first][dir.second], dir.first, dir.second)] = 1;
-        trace[dir.first][dir.second] = 1;
-        ca.pb(mp(dir.first, dir.second));
+    } else if (is_traced(dir.first, dir.second)) {
+      continue;
+    } else {
+      trace[dir.first][dir.second] = 1;
+      ca.pb(mp(dir.first, dir.second));
+      if (is_trap(dir.first, dir.second)) tr[mp(dir.first, dir.second)] = 1;
+      else {
+        pot += ini_array[dir.first][dir.second];
+        pot += trace_full(mask, dir.first, dir.second, ca, tr);
       }
-    } else if (is_normal(dir.first, dir.second)) {
-      trace[dir.first][dir.second] = 1;
-      ca.pb(mp(dir.first, dir.second));
-      trace_full(dir.first, dir.second, ca, tr, max_out, reach_target, um);
-    } else if (is_potion(dir.first, dir.second)) {
-      trace[dir.first][dir.second] = 1;
-      ca.pb(mp(dir.first, dir.second));
-      max_out += ini_array[dir.first][dir.second];
-      trace_full(dir.first, dir.second, ca, tr, max_out, reach_target, um);
-    }
+    } 
   }
+  return pot;
 }
 
-int trace_parrell(bool& rt, decltype(untrack_map) um) {
-  decltype(untrack_map) need_track;
-  for (auto& m: um) {
-    if (!need_track[m.first]) continue;
-    // 3. use this route & track the leave
-    int cr = trace_cave(rt, current_energy + delta + ini_array[r][l], num);
-    if (is_isolate) need_track[m.first] = false;
+int trace_cave(int mask, int ckey, map<pair<int, int>, int> tr) {
+  if (COMPILE) cout << "mask:" << bitset<sizeof(int)*8>(mask) << endl;
+  if (mask_traced.count(mask)) {
+    if (COMPILE) printf("mask %d is in mask_traced, with value: %d\n", mask, mask_traced[mask]);
+    return mask_traced[mask];
   }
-  if (!finish) trace_parrell(rt, um);
-}
-
-int trace_cave(bool& reach_target, pair<int, int> cp, int current_energy, decltype(untrack_map) um) {
-  int max_out = -1;
-  int rt_max = -1;
-  // 1. get item
-  int e = current_energy, r = cp.first, l = cp.second;
-  // 2. ini ca
+  int res = -1;
+  auto pos = pos_map[ckey];
+  int r = pos.first, l = pos.second;
+  if (COMPILE) { printf("mask %d stands (%d, %d)\n", mask, r, l); }
+  if (leave_energy[mask] + ini_array[r][l] < 0) return res;
+  // get ca, tr & new e;
   vector<pair<int, int>> ca;
-  decltype(untrck_map) num(um);
-  bool rt = reach_target;
-  int delta = trace_full(rt, r, l, ca, num);
-  int cr = trace_parrell(rt, num);
-  if (rt && max_out < cr) { reach_target = true; max_out = cr; }
-  return max_out;
+  trace[r][l] = 1;
+  ca.pb(mp(r, l));
+  int pot = trace_full(mask, r, l, ca, tr);
+  if (COMPILE) printf("mask %d get pot %d\n", mask, pot);
+  // set leave_energy
+  leave_energy[mask] += ini_array[r][l] + pot;
+  if (COMPILE) printf("mask %d, reach_target: %d\n", mask, reach_target[mask]);
+  if (reach_target[mask]) res = leave_energy[mask];
+  for (auto& it: tr) {
+    int pr = it.first.first, pl = it.first.second;
+    int key = key_map[mp(pr, pl)];
+    int new_mask = mask + (1 << key);
+    decltype(tr) ntr(tr);
+    ntr.erase(it.first);
+    if (COMPILE) printf("mask %d, (%d, %d): %d, new_mask: %d\n", mask, pr, pl, key, new_mask);
+    leave_energy[new_mask] = leave_energy[mask];
+    reach_target[new_mask] = reach_target[mask];
+    res = max(res, trace_cave(new_mask, key, ntr));
   }
-  // 4. clean ca
-  for (auto& t: ca) {
-    int r = t.first, l = t.second;
-    trace[r][l] = -1;
+  // clean ca
+  for (auto& it: ca) {
+    trace[it.first][it.second] = -1;
   }
-  return max_out;
+  mask_traced[mask] = res;
+  if (COMPILE) printf("mask %d, (%d, %d) mask_traced set to true, with res: %d\n", mask, r, l, res);
+  return res;
 }
 
 int main(int argc, char** argv) {
@@ -155,17 +169,36 @@ int main(int argc, char** argv) {
     for (int j = 0; j < N; j++) 
       for (int k = 0; k < M; k++) 
         scanf("%d", &ini_array[j][k]);
+    // initialize
     memset(trace, -1, sizeof(trace));
-    auto cp = mp(SR - 1, SC - 1);
-    untrack_map.clear();
-    untrack_map[cp] = 1;
-    bool reach_target = false;
-    int current_energy = E;
-    int res = trace_cave(reach_target, cp, current_energy, untrack_map);
-    if (!reach_target) res = -1;
+    key_map.clear();
+    pos_map.clear();
+    leave_energy.clear();
+    reach_target.clear();
+    mask_traced.clear();
+    tr.clear();
+    // setup key_map
+    int cnt = 0;
+    key_map[mp(SR - 1, SC - 1)] = cnt++;
+    pos_map[0] = mp(SR - 1, SC - 1);
+    if (COMPILE) printf("key_map, (%d, %d): %d\n", SR - 1, SC - 1, cnt - 1);
+    for (int j = 0; j < N; j++) {
+      for (int k = 0; k < M; k++) {
+        if (is_trap(j, k)) {
+          key_map[mp(j, k)] = cnt;
+          pos_map[cnt++] = mp(j, k);
+          if (COMPILE) printf("key_map, (%d, %d): %d\n", j, k, cnt - 1);
+        }
+      }
+    }
+    // mask set to 0 to search
+    mask = 0;
+    leave_energy[mask] = E;
+    int res = trace_cave(mask, 0, tr);
     if (COMPILE) printf ("res: %d\n", res);
     clock_t rt = clock();
     if (TESTTIME) printf("Read in data takes time: %f seconds\n", ((float)(rt - st)) / CLOCKS_PER_SEC);
+    if (COMPILE) printf_array(ini_array, 0, "ini_array", "int");
     printf("Case #%d: %d\n", i, res);
   }
   return 0;
