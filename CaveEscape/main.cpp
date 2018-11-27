@@ -19,7 +19,7 @@
 
 using namespace std;
 
-#define LARGE 1000
+#define LARGE 200
 #define COMPILE false
 #define TESTTIME false
 
@@ -27,17 +27,19 @@ using namespace std;
 int T = 0;
 int N, M, E, SR, SC, TR, TC;
 int ini_array[LARGE][LARGE];
-int trace[LARGE][LARGE];
-int vrank;
-int erank;
-int mask;
 const int MASK_LEN = 17;
+int cnt_len = 0;
 map<pair<int, int>, int> key_map;
-map<pair<int,int>, int> tr;
 map<int, pair<int, int>> pos_map;
 map<int, int> leave_energy;
 map<int, int> reach_target;
+map<int, int> unvisited;
 map<int, int> mask_traced;
+int traced[LARGE][LARGE];
+int area[LARGE];
+int area_array[LARGE][LARGE];
+int area_potion[LARGE * LARGE];
+int area_number = 0;
 
 void printf_array(void* a, int num, char* name, char* type="int") {
   printf("Begin print content of %s:\n", name);
@@ -74,7 +76,7 @@ bool is_target(int r, int l) {
 }
 
 bool is_traced(int r, int l) {
-  return (0 <= trace[r][l]);
+  return 0 < traced[r][l];
 }
 
 vector< pair<int, int> > direction(int r, int l) {
@@ -86,68 +88,110 @@ vector< pair<int, int> > direction(int r, int l) {
   return res;
 }
 
-int trace_full(int mask, int r, int l, vector<pair<int, int>> &ca, map<pair<int, int>, int> &tr) {
-  int pot = 0;
-  if (is_target(r, l)) {
-    if(COMPILE) printf("At (%d, %d), result reach.\n", r, l);
-    reach_target[mask] = 1;
-  }
+void trace_full(int mask, int r, int l) {
+  traced[r][l] = 1;
+  if (is_target(r, l)) reach_target[mask] = 1;
   for (auto& dir: direction(r, l)) {
-    if (is_obstacle(dir.first, dir.second)) {
+    if (is_obstacle(dir.first, dir.second) || is_traced(dir.first, dir.second)) {
       continue;
-    } else if (is_traced(dir.first, dir.second)) {
-      continue;
+    } else if (is_trap(dir.first, dir.second)) {
+      unvisited[mask] |= (1 << key_map[mp(dir.first, dir.second)]);
     } else {
-      trace[dir.first][dir.second] = 1;
-      ca.pb(mp(dir.first, dir.second));
-      if (is_trap(dir.first, dir.second)) tr[mp(dir.first, dir.second)] = 1;
-      else {
-        pot += ini_array[dir.first][dir.second];
-        pot += trace_full(mask, dir.first, dir.second, ca, tr);
-      }
-    } 
+      trace_full(mask, dir.first, dir.second);
+    }
   }
-  return pot;
 }
 
-int trace_cave(int mask, int ckey, map<pair<int, int>, int> tr) {
-  if (COMPILE) cout << "mask:" << bitset<sizeof(int)*8>(mask) << endl;
+void trace_each_point(int r, int l) {
+  if (area_array[r][l] != 0) return;
+  if (is_normal(r, l) || is_potion(r, l)) {
+    area_array[r][l] = area_number;
+    area_potion[area_number] += ini_array[r][l];
+  } else if (is_trap(r, l)) {
+    int k = key_map[mp(r, l)];
+    area[area_number] |= (1 << k);
+    return;
+  } else if (is_obstacle(r, l)) return;
+  for (auto& t: direction(r, l)) {
+    trace_each_point(t.first, t.second); 
+  }
+}
+
+void trace_area() {
+  area_number = 1;
+  for (int i = 0; i < N; i++) 
+    for (int j = 0; j < M; j++) {
+      if ((is_normal(i, j) || is_potion(i, j)) && area_array[i][j] == 0) {
+        trace_each_point(i, j);
+        area_number++;
+      }
+    }
+  int an = area_array[SR - 1][SC - 1];
+  area[an] |= 1;
+}
+
+void get_potion(int r, int l, int new_mask, int cmask) {
+  int tmask = new_mask;
+  int tt[] = {0, 0, 0, 0};
+  int i = 0;
+  for (auto& t: direction(r, l)) {
+    if (is_obstacle(t.first, t.second) || is_trap(t.first, t.second)) continue;
+    int an = area_array[t.first][t.second];
+    bool has_added = false;
+    for (int j = 0; j < i; j++) 
+      if (tt[j] == an) {
+        has_added = true;
+        break;
+      }
+    if (has_added) continue;
+    tt[i++] = an;
+    if (COMPILE) printf("next r: %d, l: %d, an: %d, area: %d, tmask: %d, cmask: %d\n", t.first, t.second, an, area[an], tmask, cmask);
+    if ((area[an] & tmask) == cmask) {
+      leave_energy[new_mask] += area_potion[an];
+      tmask |= area[an];
+      if (COMPILE) printf("leave_energy[%d] become %d\n", new_mask, leave_energy[new_mask]);
+    }
+  }
+  if (COMPILE) printf("leave_energy[%d]: %d\n", new_mask, leave_energy[new_mask]);
+}
+
+int trace_cave(int mask) {
   if (mask_traced.count(mask)) {
     if (COMPILE) printf("mask %d is in mask_traced, with value: %d\n", mask, mask_traced[mask]);
     return mask_traced[mask];
   }
   int res = -1;
-  auto pos = pos_map[ckey];
-  int r = pos.first, l = pos.second;
-  if (COMPILE) { printf("mask %d stands (%d, %d)\n", mask, r, l); }
-  if (leave_energy[mask] + ini_array[r][l] < 0) return res;
-  // get ca, tr & new e;
-  vector<pair<int, int>> ca;
-  trace[r][l] = 1;
-  ca.pb(mp(r, l));
-  int pot = trace_full(mask, r, l, ca, tr);
-  if (COMPILE) printf("mask %d get pot %d\n", mask, pot);
-  // set leave_energy
-  leave_energy[mask] += ini_array[r][l] + pot;
-  if (COMPILE) printf("mask %d, reach_target: %d\n", mask, reach_target[mask]);
-  if (reach_target[mask]) res = leave_energy[mask];
-  for (auto& it: tr) {
-    int pr = it.first.first, pl = it.first.second;
-    int key = key_map[mp(pr, pl)];
-    int new_mask = mask + (1 << key);
-    decltype(tr) ntr(tr);
-    ntr.erase(it.first);
-    if (COMPILE) printf("mask %d, (%d, %d): %d, new_mask: %d\n", mask, pr, pl, key, new_mask);
-    leave_energy[new_mask] = leave_energy[mask];
-    reach_target[new_mask] = reach_target[mask];
-    res = max(res, trace_cave(new_mask, key, ntr));
+  if (COMPILE) cout << "mask:" << bitset<sizeof(int)*8>(mask) << endl;
+  if (reach_target[mask]) {
+    res = leave_energy[mask];
+    if (COMPILE) printf("target has reached, with leave_energy: %d\n", res);
   }
-  // clean ca
-  for (auto& it: ca) {
-    trace[it.first][it.second] = -1;
+  for (int i = 0; i < cnt_len; i++) {
+    int cmask = (1 << i);
+    if (COMPILE) cout << "cmask:" << bitset<sizeof(int)*8>(cmask) << endl;
+    if (COMPILE) cout << "unvisited:" << bitset<sizeof(int)*8>(unvisited[mask]) << endl;
+    if (COMPILE) cout << "mask & cmask:" << bitset<sizeof(int)*8>(mask & cmask) << endl;
+    if (COMPILE) cout << "unvisited & cmask:" << bitset<sizeof(int)*8>(unvisited[mask] & cmask) << endl;
+    if ((mask & cmask) == 0 && (unvisited[mask] & cmask) != 0) {
+      int new_mask = (mask | cmask);
+      if (COMPILE) printf("unvisited: %d\n", i);
+      if (COMPILE) cout << "new_mask:" << bitset<sizeof(int)*8>(new_mask) << endl;
+      auto pos = pos_map[i];
+      int r = pos.first, l = pos.second;
+      leave_energy[new_mask] = leave_energy[mask] + ini_array[r][l];
+      if (0 <= leave_energy[new_mask]) {
+        reach_target[new_mask] = reach_target[mask] || reach_target[cmask];
+        get_potion(r, l, new_mask, cmask);
+        if (COMPILE) printf("leave_energy[%d] become %d\n", new_mask, leave_energy[new_mask]);
+        unvisited[new_mask] = (unvisited[mask] | unvisited[cmask]);
+        unvisited[new_mask] &= (~cmask);
+        if (COMPILE) cout << "unvisited, new mask:" << bitset<sizeof(int)*8>(unvisited[new_mask]) << endl;
+        res = max(res, trace_cave(new_mask));
+      }
+    }
   }
   mask_traced[mask] = res;
-  if (COMPILE) printf("mask %d, (%d, %d) mask_traced set to true, with res: %d\n", mask, r, l, res);
+  if (COMPILE) printf("mask_traced(%d) set to true, with res: %d\n", mask, res);
   return res;
 }
 
@@ -170,31 +214,52 @@ int main(int argc, char** argv) {
       for (int k = 0; k < M; k++) 
         scanf("%d", &ini_array[j][k]);
     // initialize
-    memset(trace, -1, sizeof(trace));
     key_map.clear();
     pos_map.clear();
     leave_energy.clear();
     reach_target.clear();
     mask_traced.clear();
-    tr.clear();
+    unvisited.clear();
+    memset(area, 0, sizeof(area));
+    memset(area_array, 0, sizeof(area_array));
+    memset(area_potion, 0, sizeof(area_potion));
     // setup key_map
-    int cnt = 0;
-    key_map[mp(SR - 1, SC - 1)] = cnt++;
+    cnt_len = 0;
+    key_map[mp(SR - 1, SC - 1)] = cnt_len++;
     pos_map[0] = mp(SR - 1, SC - 1);
-    if (COMPILE) printf("key_map, (%d, %d): %d\n", SR - 1, SC - 1, cnt - 1);
+    if (COMPILE) printf("key_map, (%d, %d): %d\n", SR - 1, SC - 1, cnt_len - 1);
     for (int j = 0; j < N; j++) {
       for (int k = 0; k < M; k++) {
         if (is_trap(j, k)) {
-          key_map[mp(j, k)] = cnt;
-          pos_map[cnt++] = mp(j, k);
-          if (COMPILE) printf("key_map, (%d, %d): %d\n", j, k, cnt - 1);
+          key_map[mp(j, k)] = cnt_len;
+          pos_map[cnt_len++] = mp(j, k);
+          if (COMPILE) printf("key_map, (%d, %d): %d\n", j, k, cnt_len - 1);
         }
       }
     }
-    // mask set to 0 to search
-    mask = 0;
+    // previsit each point, get unvisited
+    for (int j = 0; j < cnt_len; j++) {
+      auto pos = pos_map[j];
+      int mask = 1 << j;
+      unvisited[mask] = 0;
+      reach_target[mask] = 0;
+      memset(traced, 0, sizeof(traced));
+      trace_full(mask, pos.first, pos.second);
+    }
+    // area set
+    trace_area();
+    for (int j = 0; j < N; j++) {
+      for (int k = 0; k < M; k++) {
+        if (COMPILE) {
+          printf("area[%d][%d]: %d, area: %d, potion: %d\n", j, k, area_array[j][k], area[area_array[j][k]], area_potion[area_array[j][k]]);
+        }
+      }
+    }
+    // mask set to 1 to search
+    int mask = 1;
     leave_energy[mask] = E;
-    int res = trace_cave(mask, 0, tr);
+    get_potion(SR - 1, SC - 1, mask, mask);
+    int res = trace_cave(mask);
     if (COMPILE) printf ("res: %d\n", res);
     clock_t rt = clock();
     if (TESTTIME) printf("Read in data takes time: %f seconds\n", ((float)(rt - st)) / CLOCKS_PER_SEC);
