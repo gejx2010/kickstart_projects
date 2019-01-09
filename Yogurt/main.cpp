@@ -35,13 +35,13 @@ typedef vector<pri> vpri;
 #define pb push_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 200001
+#define LARGE 10000
 #define COMPILE false
 #define TESTTIME false
 
 // define initial parameters here
-int T = 0;
-int ini[LARGE], sum[LARGE];
+int T = 0, K, N;
+int A[LARGE];
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -56,9 +56,25 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%d %d", &N, &K);
+    int j = 0;
+    while (j++ < N) scanf("%d", &A[j]);
+    sort(A + 1, A + N + 1);
+    int day = 1, rk = 1, cnt = 0, cc = 0;
+    while (rk <= N) {
+      if (day <= A[rk]) {
+        cc++;
+        cnt++;
+      }
+      rk++;
+      if (cc == K) {
+        cc = 0;
+        day++;
+      }
+    }
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %d\n", i, cnt);
   }
   return 0;
 }

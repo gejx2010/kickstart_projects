@@ -35,13 +35,79 @@ typedef vector<pri> vpri;
 #define pb push_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 200001
+#define LARGE 200
 #define COMPILE false
 #define TESTTIME false
 
 // define initial parameters here
-int T = 0;
-int ini[LARGE], sum[LARGE];
+int T = 0, N, M, P;
+char fri[LARGE][LARGE], fbd[LARGE][LARGE];
+char ori[LARGE];
+int bias[LARGE];
+int ori_bias;
+multimap<int, string> hm;
+
+bool not_exist(const char* ori) {
+  for (int i = 0; i < M; ++i) {
+    if (strcmp(ori, fbd[i]) == 0)
+      return false;
+  }
+  return true;
+}
+
+char change(char a) {
+  if (a == '0') return '1';
+  else return '0';
+}
+
+int solve() {
+  // find original closest strings
+  ori_bias = 0;
+  for (int i = 0; i < P; ++i) {
+    int cz = 0, co = 0;
+    for (int j = 0; j < N; ++j) {
+      if (fri[j][i] == '0') ++cz;
+      else ++co;
+    }
+    if (co <= cz) { 
+      ori[i] = '0'; 
+      ori_bias += co; 
+      bias[i] = cz - co;
+    } else { 
+      ori[i] = '1'; 
+      ori_bias += cz; 
+      bias[i] = co - cz;
+    }
+  }
+  ori[P] = '\0';
+  PR(ori);
+  PR(ori_bias);
+  if (not_exist(ori)) return ori_bias;
+  // huffman strings
+  string nst(ori);
+  int cur_bias = ori_bias;
+  hm.clear();
+  while (true) {
+    // base on last choice, insert new item into map
+    for (int i = 0; i < P; ++i) {
+      if (nst[i] == ori[i]) {
+        string cnst(nst);
+        PR(cnst);
+        cnst[i] = change(nst[i]);
+        PR(cnst);
+        hm.insert({cur_bias + bias[i], cnst});
+      }
+    }
+    // select new choice from map
+    auto it = hm.begin();
+    cur_bias = (*it).first;
+    nst = (*it).second;
+    hm.erase(it);
+    PR(nst);
+    PR(cur_bias);
+    if (not_exist(nst.c_str())) return cur_bias;
+  }
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -56,9 +122,13 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%d %d %d", &N, &M, &P);
+    for (int j = 0; j < N; ++j) scanf("%s", &fri[j]);
+    for (int j = 0; j < M; ++j) scanf("%s", &fbd[j]);
+    int res = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %d\n", i, res);
   }
   return 0;
 }
