@@ -13,6 +13,7 @@
 #include <tuple>
 #include <set>
 #include <climits>
+#include <numeric>
 
 using namespace std;
 

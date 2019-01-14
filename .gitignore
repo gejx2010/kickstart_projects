@@ -4,3 +4,5 @@ test_bound
 *.in*
 *.out*
 heap_sort
+heap_sort.cpp
+test_bound.cpp
