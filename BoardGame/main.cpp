@@ -35,10 +35,13 @@ typedef vector<pri> vpri;
 #define mt make_tuple
 #define pb push_back
 #define gel(x,i) get<(i)>(x)
+#define lson(x) (((x) << 1) + 1)
+#define rson(x) (((x) << 1) + 2)
 
 #define LARGE 16
 #define MLARGE 3010
 #define LLARGE 1000000
+#define ARRAY_SIZE (1 << 13)
 #define COMPILE false
 #define TESTTIME true
 
@@ -66,6 +69,10 @@ int ss[LARGE], mm[LARGE], om[LARGE];
 int sum_ss, sum_mm;
 bool first_end, sec_end;
 int mark[LARGE];
+int stree[ARRAY_SIZE][ARRAY_SIZE];
+map<int, int> rma, rmb;
+pri check_id[ARRAY_SIZE];
+int upm, upr;
 
 void precompute() {
   for (int i = 1; i < LARGE; ++i) {
@@ -200,12 +207,11 @@ void visit(int* arr, int& sum, int* ls, int& osz, tpi* m, int& sz) {
 
 void compute_less() {
   // compute P(x, y)
+  clock_t st = clock();
   memset(dless, 0, sizeof dless);
   memset(tless, 0, sizeof tless);
   memset(column, 0, sizeof column);
-  memset(tcolumn, 0, sizeof column);
   int rk = 0;
-  rmin = aless[0];
   for (int i = 0; i < aosz; ++i) {
     int upb = aless[i];
     // add column
@@ -218,7 +224,6 @@ void compute_less() {
         int ktb = sum_a - upb - rtb;
         while (l == cl && m < rtb && rk < smbs) {
           ++column[j];
-          if (r < rmin) ++tcolumn[j];
           tie(l, m, r) = smb[++rk];
         }
         if (upb <= l || smbs <= rk) break;
@@ -230,47 +235,127 @@ void compute_less() {
     }
     // add to dless[i][j] & tless[i][j]
     int sum = 0;
-    int tsum = 0;
     for (int j = 0; j < aosz; ++j) {
       // compute dless[i][j]
       sum += column[j];
       dless[i][j] = sum;
-      // compute tless[i][j]
-      tsum += tcolumn[j];
-      tless[i][j] = tsum;
     }
   }
+  debug("process dless takeds time: %f seconds.\n", ((float)clock() - st) / CLOCKS_PER_SEC);
+}
+
+void update_layer_y(int xid, int yid) {
+  int yb = check_id[yid].first, ye = check_id[yid].second;
+  if (upr < yb || ye <= upr) return;
+  ++stree[xid][yid];
+  if (ye - yb <= 1) return;
+  int mid = (yb + ye) >> 1;
+  if (upr < mid) update_layer_y(xid, lson(yid));
+  else update_layer_y(xid, rson(yid));
+}
+
+void update_layer(int xid) {
+  int xb = check_id[xid].first, xe = check_id[xid].second;
+  if (upm < xb || xe <= upm) return;
+  update_layer_y(xid, 0);
+  if (xe - xb <= 1) return;
+  int mid = (xb + xe) >> 1;
+  if (upm < mid) update_layer(lson(xid));
+  else update_layer(rson(xid));
+}
+
+void update_tree(int rk) {
+  int l, m, r;
+  tie(l, m, r) = smb[rk];
+  upm = rmb[m], upr = rmb[r];
+  update_layer(0);
+}
+
+int search_layer_y(int xid, int yid) {
+  int yb = check_id[yid].first, ye = check_id[yid].second;
+  int l = bless[yb], h = bless[ye - 1];
+  if (upr <= l) return 0;
+  if (h < upr) return stree[xid][yid];
+  int mid = (yb + ye) >> 1;
+  int sum = 0;
+  sum += search_layer_y(xid, lson(yid));
+  sum += search_layer_y(xid, rson(yid));
+  return sum;
+}
+
+int search_layer(int xid) {
+  int xb = check_id[xid].first, xe = check_id[xid].second;
+  int l = bless[xb], h = bless[xe - 1];
+  if (upm <= l) return 0;
+  if (h < upm) return search_layer_y(xid, 0);
+  int mid = (xb + xe) >> 1;
+  int sum = 0;
+  sum += search_layer(lson(xid));
+  sum += search_layer(rson(xid));
+  return sum;
+}
+
+int search_tree(int m, int r, int mm, int rr) {
+  upm = m, upr = r;
+  if (0 <= tless[mm][rr]) return tless[mm][rr];
+  return (tless[mm][rr] = search_layer(0));
+}
+
+void build_id_each(int id, int st, int ed) {
+  check_id[id] = mp(st, ed);
+  if (ed - st == 1) return;
+  int mid = (st + ed) >> 1;
+  build_id_each(lson(id), st, mid);
+  build_id_each(rson(id), mid, ed);
+}
+
+void build_id() {
+  build_id_each(0, 0, bosz);
 }
 
 int count() {
-  map<int, int> rm;
-  for (int i = 0; i < aosz; ++i) rm[aless[i]] = i;
+  for (int i = 0; i < aosz; ++i) rma[aless[i]] = i;
+  for (int i = 0; i < bosz; ++i) rmb[bless[i]] = i;
   int cnt = 0;
+  memset(stree, 0, sizeof stree);
+  memset(tless, -1, sizeof tless);
+  build_id();
+  int rk = 0;
   for (int i = 0; i < smas; ++i) {
     int l = 0, m = 0, r = 0;
     tie(l, m, r) = sma[i];
-    if (rmin < l) break;
-    int ll = rm[l], mm = rm[m], rr = rm[r];
+    auto it = lower_bound(smb + rk, smb + smbs, mt(l, 0, 0));
+    int nrk = it - smb;
+    for (int j = rk; j < nrk; ++j) { 
+      update_tree(j);
+    }
+    rk = nrk;
+    int ll = rma[l], mm = rma[m], rr = rma[r];
     int s1 = dless[ll][mm];
     int s2 = dless[ll][rr];
     int s3 = dless[mm][rr];
-    int s4 = tless[mm][rr];
+    int s4 = search_tree(m, r, mm, rr);
     int cc = s1 + s2 + s3 - (s4 << 1);
-    if (cnt < cc) 
+    if (cnt < cc) {
       cnt = cc;
+    }
   }
   return cnt;
 }
 
 double solve() {
+  clock_t st = clock();
   // visit B to get <first, second> pair array for B
   visit(B, sum_b, bless, bosz, smb, smbs);
   // visit A to get <first, second> pair array for A
   visit(A, sum_a, aless, aosz, sma, smas);
-  // compute P(x1, x2) and P(x1, x2, x3)
+  debug("visit array takeds time: %f seconds.\n", ((float)clock() - st) / CLOCKS_PER_SEC);
+  // compute P(x1, x2)
+  st = clock();
   compute_less();
   // iterate on A to get the max count
   int cnt = count();
+  debug("count takeds time: %f seconds.\n", ((float)clock() - st) / CLOCKS_PER_SEC);
   ll all = combo[3 * N][N] * combo[2 * N][N];
   return (double)cnt / all;
 }
