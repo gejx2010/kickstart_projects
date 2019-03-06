@@ -38,13 +38,51 @@ typedef vector<pri> vtpi;
 #define pb push_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 200001
+#define LARGE 50
 #define COMPILE false
-#define TESTTIME false
+#define TESTTIME true
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+int N, M;
+int ini[LARGE][LARGE], sum[LARGE][LARGE][LARGE][LARGE], ma[LARGE][LARGE][LARGE][LARGE];
+bool mark[LARGE][LARGE][LARGE][LARGE];
+bool mark_min[LARGE][LARGE][LARGE][LARGE];
+
+int min_arr(int lu, int ru, int ld, int rd) {
+  if (mark_min[lu][ru][ld][rd]) return ma[lu][ru][ld][rd];
+  if (ld - lu < 1) {
+    if (rd - ru < 1) ma[lu][ru][ld][rd] = ini[lu][ru];
+    else ma[lu][ru][ld][rd] = min(min_arr(lu, ru, ld, rd - 1), ini[lu][rd]);
+  } else 
+      ma[lu][ru][ld][rd] = min(min_arr(lu, ru, ld - 1, rd), min_arr(ld, ru, ld, rd));
+  mark_min[lu][ru][ld][rd] = true;
+  //debug("min (%d, %d, %d, %d), RES: %d\n", lu, ru, ld, rd, ma[lu][ru][ld][rd]);
+  return ma[lu][ru][ld][rd];
+}
+
+int cut(int lu, int ru, int ld, int rd) {
+  if (mark[lu][ru][ld][rd]) return sum[lu][ru][ld][rd];
+  int s = 0;
+  for (int i = lu; i < ld; ++i) {
+    int cur_sum = cut(lu, ru, i, rd) + cut(i + 1, ru, ld, rd) + min_arr(lu, ru, ld, rd);
+    s = max(s, cur_sum);
+  }
+  for (int i = ru; i < rd; ++i) {
+    int cur_sum = cut(lu, ru, ld, i) + cut(lu, i + 1, ld, rd) + min_arr(lu, ru, ld, rd);
+    s = max(s, cur_sum);
+  }
+  //debug("cut %d, %d, %d, %d, RES: %d\n", lu, ru, ld, rd, s);
+  mark[lu][ru][ld][rd] = true;
+  sum[lu][ru][ld][rd] = s;
+  return s;
+}
+
+int solve() {
+  memset(mark, 0, sizeof mark);
+  memset(mark_min, 0, sizeof mark_min);
+  return cut(1, 1, N, M);
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -59,9 +97,14 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%d %d", &N, &M);
+    for (int i = 1; i <= N; ++i) 
+      for (int j = 1; j <= M; ++j) 
+        scanf("%d", &ini[i][j]);
+    int res = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %d\n", i, res);
   }
   return 0;
 }

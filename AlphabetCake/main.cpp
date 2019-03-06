@@ -12,7 +12,6 @@
 #include <cassert>
 #include <tuple>
 #include <set>
-#include <bitset>
 #include <climits>
 #include <numeric>
 
@@ -38,13 +37,72 @@ typedef vector<pri> vtpi;
 #define pb push_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 200001
+#define LARGE 50
 #define COMPILE false
 #define TESTTIME false
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+int R, C;
+char S[LARGE][LARGE];
+int mark[LARGE];
+
+void solve() {
+  memset(mark, 0, sizeof mark);
+  for (int i = 0; i < R; ++i) {
+    for (int j = 0; j < C; ++j) {
+      PR(i);
+      PR(j);
+      PR(S[i][j]);
+      if (S[i][j] != '?' && !mark[S[i][j] - 'A']) {
+        mark[S[i][j] - 'A'] = true;
+        int n = 1, l = -1, r = -1, k = 0;
+        for (k = j - 1; 0 <= k; --k, ++n) {
+          if (S[i][k] == '?') S[i][k] = S[i][j];
+          else break;
+        }
+        l = k + 1;
+        for (k = j + 1; k < C; ++k, ++n) {
+          if (S[i][k] == '?') S[i][k] = S[i][j];
+          else break;
+        }
+        r = k - 1;
+        int cft = false;
+        for (k = i - 1; 0 <= i && !cft; --k) {
+          for (int m = l; m <= r; ++m) {
+            if (S[k][m] != '?') {
+              cft = true;
+              break;
+            }
+          }
+          if (!cft) {
+            for (int m = l; m <= r; ++m) {
+              S[k][m] = S[i][j];
+            }
+          }
+        }
+        cft = false;
+        PR(S[i][j]);
+        for (k = i + 1; k < R && !cft; ++k) {
+          for (int m = l; m <= r; ++m) {
+            PR(k);
+            PR(m);
+            PR(S[k][m]);
+            if (S[k][m] != '?') {
+              cft = true;
+              break;
+            }
+          }
+          if (!cft) {
+            for (int m = l; m <= r; ++m) {
+              S[k][m] = S[i][j];
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -59,9 +117,13 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%d %d", &R, &C);
+    for (int j = 0; j < R; ++j) scanf("%s", &S[j]);
+    solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d:\n", i);
+    for (int j = 0; j < R; ++j) printf("%s\n", S[j]);
   }
   return 0;
 }

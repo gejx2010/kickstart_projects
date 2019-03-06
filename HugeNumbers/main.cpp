@@ -12,7 +12,6 @@
 #include <cassert>
 #include <tuple>
 #include <set>
-#include <bitset>
 #include <climits>
 #include <numeric>
 
@@ -43,8 +42,28 @@ typedef vector<pri> vtpi;
 #define TESTTIME false
 
 // define initial parameters here
-int T = 0;
-int ini[LARGE], sum[LARGE];
+int T = 0, A, N, P;
+
+ll kpow(ll A, ll N, ll P) {
+  A = A % P;
+  if (A == 0) return 0;
+  if (P == 1) return 0;
+  if (A == 1) return 1;
+  ll res = 1;
+  while (N) {
+    if (N & 1) res = (res * A) % P;
+    A = (A * A) % P;
+    N >>= 1;
+  }
+  return res;
+}
+
+ll huge_numbers(ll A, ll N, ll P) {
+  for (int i = N; 1 <= i; --i) {
+    A = kpow(A, i, P);
+  }
+  return A;
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -59,9 +78,10 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%d %d %d", &A, &N, &P);
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %d\n", i, huge_numbers(A, N, P));
   }
   return 0;
 }

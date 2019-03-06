@@ -12,7 +12,6 @@
 #include <cassert>
 #include <tuple>
 #include <set>
-#include <bitset>
 #include <climits>
 #include <numeric>
 
@@ -26,7 +25,6 @@ typedef tuple<int,int,int> tpi;
 typedef tuple<ll,ll,ll> tpl;
 typedef vector<int> vi;
 typedef vector<pri> vpri;
-typedef vector<pri> vtpi;
 
 #define PR(x) cerr << #x << ": " << (x) << endl;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
@@ -37,14 +35,34 @@ typedef vector<pri> vtpi;
 #define mt make_tuple
 #define pb push_back
 #define gel(x,i) get<(i)>(x)
+#define rev(c) ((c) == '-') ? '+' : '-'
 
-#define LARGE 200001
+#define LARGE 2000
 #define COMPILE false
 #define TESTTIME false
 
 // define initial parameters here
 int T = 0;
+int K;
+char S[LARGE];
 int ini[LARGE], sum[LARGE];
+
+void turn_over(int rk) {
+  for (int i = 1; i < K; ++i) S[rk + i] = rev(S[rk + i]);
+}
+
+int solve() {
+  int cnt = 0;
+  for (int i = 0; i < strlen(S); ++i) {
+    if (S[i] == '-') {
+      if (i <= strlen(S) - K) {
+        turn_over(i);
+        ++cnt;
+      } else return -1;
+    }
+  }
+  return cnt;
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -59,9 +77,13 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    cin >> S >> K;
+    int res = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    if (0 <= res) printf("Case #%d: %d\n", i, res);
+    else printf("Case #%d: IMPOSSIBLE\n", i);
+
   }
   return 0;
 }

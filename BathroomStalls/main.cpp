@@ -12,7 +12,6 @@
 #include <cassert>
 #include <tuple>
 #include <set>
-#include <bitset>
 #include <climits>
 #include <numeric>
 
@@ -26,7 +25,6 @@ typedef tuple<int,int,int> tpi;
 typedef tuple<ll,ll,ll> tpl;
 typedef vector<int> vi;
 typedef vector<pri> vpri;
-typedef vector<pri> vtpi;
 
 #define PR(x) cerr << #x << ": " << (x) << endl;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
@@ -44,7 +42,29 @@ typedef vector<pri> vtpi;
 
 // define initial parameters here
 int T = 0;
+ll N, K;
+ll rmin, rmax;
 int ini[LARGE], sum[LARGE];
+
+void solve() {
+  ll p = 1;
+  while (0 < K) {
+    ll r = (N - p + 1) / p;
+    ll m = (N - p + 1) % p;
+    if (K <= p) {
+      if (K <= m) {
+        rmax = (r + 1) >> 1;
+        rmin = r >> 1;
+        return;
+      } else {
+        rmax = r >> 1;
+        rmin = (r - 1) >> 1;
+        return;
+      }
+    } else K -= p;
+    p <<= 1;
+  }
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -59,9 +79,11 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%lld %lld", &N, &K);
+    solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %lld %lld\n", i, rmax, rmin);
   }
   return 0;
 }
