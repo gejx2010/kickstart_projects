@@ -42,10 +42,14 @@ typedef vector<pri> vtpi;
 #define LARGE 20
 #define COMPILE false
 #define TESTTIME true
+#define DLARGE 2000.0
+#define DSMALL 1e-10
 
 // define initial parameters here
 int T = 0;
 double X[LARGE][LARGE];
+
+double PI = atan(1.0) * 4;
 
 int cut(int n) {
   return n % 3;
@@ -79,15 +83,10 @@ double multi(double* x, double* y) {
 
 void cp_hm(double* a, double* l, double* r, double lamb) {
   double rr[3];
-  PRA(r,3);
   times(r, lamb, rr);
-  PRA(rr, 3);
   double ll[3];
-  PRA(l, 3);
   times(l, 1 - lamb, ll);
-  PRA(ll, 3);
   add(rr, ll, a);
-  PRA(a, 3);
 }
 
 double compute(int h, int l, int r) {
@@ -175,6 +174,103 @@ double compute(int h, int l, int r) {
   return res;
 }
 
+double facos(double v) {
+  if (1 < v) return 0;
+  if (v < -1) return PI;
+  return acos(v);
+}
+
+bool detect(double rh, double dhl, double rl, double dhr, double rr, double* hl, double* hr) {
+  double thl = (rh * rh + dhl * dhl - rl * rl) / (2 * rh * dhl);
+  PR(thl);
+  double vthl = facos(thl);
+  PR(vthl);
+  double thr = (rh * rh + dhr * dhr - rr * rr) / (2 * rh * dhr);
+  PR(thr);
+  double vthr = facos(thr);
+  PR(vthr);
+  double tlr = multi(hl, hr) / (dhl * dhr);
+  PR(tlr);
+  double vtlr = facos(tlr);
+  PR(vtlr);
+  return vtlr < vthl + vthr;
+}
+
+bool interset(int h, double rh, int l, double rl, int r, double rr) {
+  double hl[3], lr[3], hr[3];
+  sub(X[h], X[l], hl);
+  sub(X[h], X[r], hr);
+  sub(X[l], X[r], lr);
+  double dhl = dis(hl);
+  double dhr = dis(hr);
+  double dlr = dis(lr);
+  PR(rh);
+  PR(rl);
+  PR(rr);
+  PR(dhl);
+  PR(dhr);
+  PR(dlr);
+  if (rh + rl < dhl) return false;
+  if (rh + rr < dhr) return false;
+  if (rl + rr < dlr) return false;
+  if (dhl < abs(rh - rl)) {
+    bool res = (rl < rh && dlr < rl + rr) || (rh < rl && dhr < rh + rr);
+    return res;
+  }
+  if (dhr < abs(rh - rr)) {
+    bool res = (rh < rr && dhl < rh + rl) || (rr < rh && dlr < rr + rl);
+    return res;
+  }
+  if (dlr < abs(rl - rr)) {
+    bool res = (rl < rr && dhl < rl + rh) || (rr < rl && dhr < rh + rr);
+    return res;
+  }
+  double nhl[3];
+  times(hl, -1, nhl);
+  if (detect(rh, dhl, rl, dhr, rr, hl, hr) ||
+      detect(rl, dhl, rh, dlr, rr, nhl, lr) ||
+      detect(rr, dhr, rh, dlr, rl, hr, lr))
+    return true;
+  return false;
+}
+
+double bs2(int h, int l, int r) {
+  double bres = DLARGE, nres = 0, m = 0.0;
+  while (true) {
+    m = (bres + nres) / 2;
+    PR("bs2");
+    PR(m);
+    if (bres - nres < DSMALL) break;
+    else if (interset(h, m * 5, l, m, r, m)) bres = m; 
+    else nres = m;
+  }
+  return m;
+}
+
+double bs1(int h, int l, int r) {
+  double bres = DLARGE, nres = 0, m = 0.0;
+  while (true) {
+    m = (bres + nres) / 2;
+    PR("bs1");
+    PR(m);
+    if (bres - nres < DSMALL) break;
+    else if (interset(h, m, l, m * 3, r, m * 3)) bres = m;
+    else nres = m;
+  }
+  return m;
+}
+
+double solve4() {
+  double res = DBL_MAX;
+  res = min(res, bs1(0, 1, 2));
+  res = min(res, bs1(1, 2, 0));
+  res = min(res, bs1(2, 0, 1));
+  res = min(res, bs2(0, 1, 2));
+  res = min(res, bs2(1, 2, 0));
+  res = min(res, bs2(2, 0, 1));
+  return res;
+}
+
 double solve3() {
   double a[3];
   double md = 0;
@@ -223,7 +319,7 @@ int main(int argc, char** argv) {
       for (int k = 0; k < 3; ++k) {
         scanf("%lf", &X[j][k]);
       }
-    double r = solve2();
+    double r = solve4();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
     printf("Case #%d: %.10f\n", i, r);
