@@ -107,6 +107,34 @@ string solve() {
   return "YES";
 }
 
+int next_med(int med) {
+  if (med < 0) return (N - 1) / 2;
+  int m = (N - 1) / 2;
+  if (N & 1) {
+    if (med < m) return m + (m - med);
+    else return m - (med - m) - 1;
+  } else {
+    if (med <= m) return m + (m - med) + 1;
+    else return m - (med - m);
+  }
+}
+
+string solve2() {
+  if (N <= 2) return "YES";
+  int low = 1, high = N, med = -1;
+  while (low < high) {
+    med = next_med(med);
+    PR(low);
+    PR(high);
+    PR(med);
+    PR(A[med]);
+    if (A[med] != low  && A[med] != high) return "NO";
+    if (A[med] == low) ++low;
+    if (A[med] == high) --high;
+  }
+  return "YES";
+}
+
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
   string def_ofn = "large.out";
@@ -122,7 +150,7 @@ int main(int argc, char** argv) {
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
     scanf("%d", &N);
     rep (j,0,N) scanf("%d", &A[j]);
-    string res = solve();
+    string res = solve2();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
     printf("Case #%d: %s\n", i, res.c_str());
