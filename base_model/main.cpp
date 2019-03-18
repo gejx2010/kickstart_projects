@@ -33,7 +33,7 @@ typedef vector<pri> vtpi;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
 #define PRV(x) cerr << #x << ": "; for (auto& x##_it: x) cerr << x##_it << ' '; cerr << endl;
 #define debug(...) fprintf(stderr, __VA_ARGS__)
-#define rep(i,a,b) for (int i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define rep(i,a,b) for (decltype(b) i = (a), i##_end_ = (b); i < i##_end_; ++i)
 #define mp make_pair
 #define mt make_tuple
 #define pb push_back
