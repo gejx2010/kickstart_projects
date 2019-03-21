@@ -34,6 +34,8 @@ typedef vector<pri> vtpi;
 #define PRV(x) cerr << #x << ": "; for (auto& x##_it: x) cerr << x##_it << ' '; cerr << endl;
 #define debug(...) fprintf(stderr, __VA_ARGS__)
 #define rep(i,a,b) for (decltype(b) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define inc(i,a,b) for (decltype(b) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define dec(i,a,b) for (decltype(a) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
 #define mp make_pair
 #define mt make_tuple
 #define pb push_back
