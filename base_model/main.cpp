@@ -29,6 +29,8 @@ typedef vector<int> vi;
 typedef vector<pri> vpri;
 typedef vector<pri> vtpi;
 
+using prd = pair<double,double>;
+
 #define PR(x) cerr << #x << ": " << (x) << endl;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
 #define PRV(x) cerr << #x << ": "; for (auto& x##_it: x) cerr << x##_it << ' '; cerr << endl;
@@ -39,6 +41,7 @@ typedef vector<pri> vtpi;
 #define mp make_pair
 #define mt make_tuple
 #define pb push_back
+#define eb emplace_back
 #define gel(x,i) get<(i)>(x)
 
 #define LARGE 200001
