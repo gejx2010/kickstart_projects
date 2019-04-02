@@ -45,13 +45,41 @@ using prd = pair<double,double>;
 #define eb emplace_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 200001
+#define LARGE 3005
 #define COMPILE false
-#define TESTTIME false
+#define TESTTIME true
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+int R, C, K;
+int M[LARGE];
+int mark[LARGE][LARGE];
+int TS[LARGE][LARGE];
+
+bool test(int x, int y, int r) {
+  return TS[x][y] + TS[x - r][y - r] - TS[x - r][y] - TS[x][y - r];
+}
+
+ll solve() {
+  memset(M, 0, sizeof M);
+  memset(TS, 0, sizeof TS);
+
+  ll res = 0;
+  inc (i, 1, R + 1) {
+    inc (j, 1, C + 1) {
+      M[j] += (mark[i][j]) ? 1 : 0;
+      TS[i][j] = TS[i][j - 1] + M[j];
+      int d = 0, u = min(i, j);
+      while (d < u) {
+        int r = (d + u) >> 1;
+        if (test(i, j, r + 1)) u = r;
+        else d = r + 1;
+      }
+      res += d;
+    }
+  }
+  return res;
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -66,9 +94,17 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%d %d %d", &R, &C, &K);
+    memset(mark, 0, sizeof mark);
+    int x, y;
+    inc (i, 1, K + 1) {
+      scanf("%d %d", &x, &y);
+      mark[x + 1][y + 1] = 1;
+    }
+    ll res = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %lld\n", i, res);
   }
   return 0;
 }

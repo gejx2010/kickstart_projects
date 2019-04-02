@@ -26,7 +26,6 @@ typedef pair<ll,ll> prl;
 typedef tuple<int,int,int> tpi;
 typedef tuple<ll,ll,ll> tpl;
 typedef vector<int> vi;
-typedef set<int> si;
 typedef vector<pri> vpri;
 typedef vector<pri> vtpi;
 
@@ -51,7 +50,18 @@ using prd = pair<double,double>;
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+int N, P;
+int S[LARGE];
+int sum[LARGE];
+
+int solve() {
+  sort(S + 1, S + N + 1);
+  sum[0] = 0;
+  inc(i, 1, N + 1) sum[i] = sum[i - 1] + S[i];
+  int mv = INT_MAX;
+  inc(i, P, N + 1) mv = min(mv, P * S[i] - (sum[i] - sum[i - P]));
+  return mv;
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -66,9 +76,12 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%d %d", &N, &P);
+    inc(i, 1, N + 1) scanf("%d", &S[i]);
+    int res = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %d\n", i, res);
   }
   return 0;
 }

@@ -26,7 +26,6 @@ typedef pair<ll,ll> prl;
 typedef tuple<int,int,int> tpi;
 typedef tuple<ll,ll,ll> tpl;
 typedef vector<int> vi;
-typedef set<int> si;
 typedef vector<pri> vpri;
 typedef vector<pri> vtpi;
 
@@ -51,24 +50,34 @@ using prd = pair<double,double>;
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+int A, B, N;
+char s[100];
+
+void solve() {
+  cin >> A >> B >> N;
+  int d = A + 1, u = B + 1;
+  while (d < u) {
+    int m = (d + u) >> 1;
+    cout << m << endl;
+    cin >> s;
+    if (string(s) == "CORRECT") return;
+    else if (string(s) == "TOO_BIG") u = m;
+    else if (string(s) == "TOO_SMALL") d = m + 1;
+    else if (string(s) == "WRONG_ANSWER") exit(-1);
+  }
+}
 
 int main(int argc, char** argv) {
-  string def_ifn = "large.in";
-  string def_ofn = "large.out";
-  if (1 < argc) def_ifn = argv[1];
-  if (2 < argc) def_ofn = argv[2];
-  freopen(def_ifn.c_str(), "r", stdin);
-  freopen(def_ofn.c_str(), "w", stdout);
-  scanf("%d", &T);
+  cin >> T;
+  cerr << "T:" << T << endl;
   if (COMPILE) printf("Get T: %d\n", T);
   int i = 0;
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
   }
   return 0;
 }

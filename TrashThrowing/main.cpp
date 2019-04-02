@@ -89,7 +89,7 @@ prd dis(double a) {
   return res;
 }
 
-bool exist(double n) {
+double exist() {
   double max_dis = 0.0;
   rep(i, 0, N + 1) {
     if (i == N) {
@@ -105,7 +105,7 @@ bool exist(double n) {
     }
     max_dis = max(max_dis, dis(u).first);
   }
-  return n <= max_dis;
+  return max_dis;
 }
 
 void cmp_o() {
@@ -117,13 +117,13 @@ void cmp_o() {
 
 double solve() {
   cmp_o();
-  double d = 0.0, u = H, m = 0.0;
-  while (THS < u - d) {
-    m = (u + d) / 2;
-    if (exist(m)) d = m;
-    else u = m;
-  }
-  return u;
+  //double d = 0.0, u = H, m = 0.0;
+  //while (THS < u - d) {
+  //  m = (u + d) / 2;
+  //  if (exist(m)) d = m;
+  //  else u = m;
+  //}
+  return exist();
 }
 
 int main(int argc, char** argv) {

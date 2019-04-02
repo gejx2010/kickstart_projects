@@ -26,7 +26,6 @@ typedef pair<ll,ll> prl;
 typedef tuple<int,int,int> tpi;
 typedef tuple<ll,ll,ll> tpl;
 typedef vector<int> vi;
-typedef set<int> si;
 typedef vector<pri> vpri;
 typedef vector<pri> vtpi;
 
@@ -44,14 +43,33 @@ using prd = pair<double,double>;
 #define pb push_back
 #define eb emplace_back
 #define gel(x,i) get<(i)>(x)
+#define chr(c) ('A' + (c))
 
-#define LARGE 200001
+#define LARGE 200
 #define COMPILE false
 #define TESTTIME false
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+char s[LARGE];
+char res[LARGE];
+
+void solve() {
+  int n = strlen(s);
+  if (n & 1) {
+    strcpy(res, "AMBIGUOUS");
+    return;
+  }
+  PR(s);
+  res[1] = s[0];
+  res[n - 2] = s[n - 1];
+  for (int i = 2; i < n - 1; i += 2) 
+    res[i + 1] = (s[i] < res[i - 1]) ? chr(s[i] + 26 - res[i - 1]) : chr(s[i] - res[i - 1]);
+  for (int i = n - 3; 0 < i; i -= 2) 
+    res[i - 1] = (s[i] < res[i + 1]) ? chr(s[i] + 26 - res[i + 1]) : chr(s[i] - res[i + 1]);
+  res[n] = '\0';
+  PR(res);
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -66,9 +84,11 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%s", s);
+    solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %s\n", i, res);
   }
   return 0;
 }
