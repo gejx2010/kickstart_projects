@@ -32,7 +32,7 @@ typedef vector<pri> vtpi;
 
 using prd = pair<double,double>;
 
-#define PR(x) cerr << #x << ": " << (x) << endl;
+#define PR(x) cout << #x << ": " << (x) << endl;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
 #define PRV(x) cerr << #x << ": "; for (auto& x##_it: x) cerr << x##_it << ' '; cerr << endl;
 #define debug(...) fprintf(stderr, __VA_ARGS__)
@@ -45,62 +45,63 @@ using prd = pair<double,double>;
 #define eb emplace_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 2005
+#define LARGE 20001
 #define COMPILE false
-#define TESTTIME false
+#define TESTTIME true
 
 // define initial parameters here
 int T = 0;
 int N;
-ll X[LARGE], Y[LARGE], Z[LARGE], R[LARGE];
-ll bd[4][3];
+ld X[LARGE], Y[LARGE], W[LARGE];
+pair<ld, ld> A[LARGE], S[LARGE];
 
-ll cmp_dis(ll lb, ll* a, int rk) {
-  ll l = abs(a[rk] + R[rk] - lb);
-  ll r = abs(a[rk] - R[rk] - lb);
-  ll lmx = max(l, r);
-  return lmx;
-}
+ld C[LARGE];
+ld XN[LARGE], YN[LARGE];
 
-ll loop(tpl a, tpl b) {
-  ll ax, ay, az, bx, by, bz;
-  tie(ax, ay, az) = a;
-  tie(bx, by, bz) = b;
-  ll mx, my, mz;
-  ll res = 0;
+ld cmp_init() {
+  XN[0] = YN[0] = 0.0;
+  ld res = 0.0;
   inc (i, 1, N + 1) {
-    mx = cmp_dis(ax, X, i);
-    my = cmp_dis(ay, Y, i);
-    mz = cmp_dis(az, Z, i);
-    ll lr = max(mx, max(my, mz));
-    mx = cmp_dis(bx, X, i);
-    my = cmp_dis(by, Y, i);
-    mz = cmp_dis(bz, Z, i);
-    ll rr = max(mx, max(my, mz));
-    res = max(res, min(lr, rr));
+    res += W[i] * X[i];
+    XN[0] -= W[i];
   }
   return res;
 }
 
-ll solve() {
-  // find boundary
-  inc (i, 1, 4) inc (j, 1, 3) {
-    if (j == 1) bd[i][j] = INT_MAX;
-    else bd[i][j] = INT_MIN;
-  }
+ld solve() {
+  // cmp x + y, x - y for each point
+  inc (i, 1, N + 1) A[i] = {X[i] + Y[i], i}, S[i] = {X[i] - Y[i], i};
+  sort (A + 1, A + N + 1);
+  sort (S + 1, S + N + 1);
+
+  // determinate each A
+  ld res = LDBL_MAX;
+  ld x, y;
+  C[0] = cmp_init();
   inc (i, 1, N + 1) {
-    bd[1][1] = min(bd[1][1], X[i] - R[i]);
-    bd[1][2] = max(bd[1][2], X[i] + R[i]);
-    bd[2][1] = min(bd[2][1], Y[i] - R[i]);
-    bd[2][2] = max(bd[2][2], Y[i] + R[i]);
-    bd[3][1] = min(bd[3][1], Z[i] - R[i]);
-    bd[3][2] = max(bd[3][2], Z[i] + R[i]);
-  }
-  ll res = INT_MAX;
-  inc (i, 1, 3) inc (j, 1, 3) {
-    res = min(res, 
-              loop(mt(bd[1][1], bd[2][i], bd[3][j]),
-                   mt(bd[1][2], bd[2][3 - i], bd[3][3 - j])));
+    int k = A[i].second;
+    // r -> d
+    C[0] -= W[k] * X[k];
+    XN[0] += W[k];
+    C[0] -= W[k] * Y[k];
+    YN[0] += W[k];
+    inc (j, 1, N + 1) {
+      x = (A[i].first + S[j].first) / 2.0;
+      y = (A[i].first - S[j].first) / 2.0;
+      int kk = S[j].second;
+      if (X[kk] + Y[kk] < A[i].first) {
+        // d -> l
+        C[j] = C[j - 1] + W[kk] * Y[kk] - W[kk] * X[kk];
+        YN[j] = YN[j - 1] - W[kk];
+        XN[j] = XN[j - 1] + W[kk];
+      } else {
+        // r -> u
+        C[j] = C[j - 1] - W[kk] * X[kk] + W[kk] * Y[kk];
+        XN[j] = XN[j - 1] + W[kk];
+        YN[j] = YN[j - 1] - W[kk];
+      }
+      res = min(res, C[j] + XN[j] * x + YN[j] * y);
+    }
   }
   return res;
 }
@@ -119,11 +120,11 @@ int main(int argc, char** argv) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
     scanf("%d", &N);
-    inc (j, 1, N + 1) cin >> X[j] >> Y[j] >> Z[j] >> R[j];
-    ll r = solve();
+    inc (j, 1, N + 1) scanf("%llf %llf %llf", &X[j], &Y[j], &W[j]);
+    ld res = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: %lld\n", i, r);
+    printf("Case #%d: %.7llf\n", i, res);
   }
   return 0;
 }

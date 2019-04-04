@@ -45,64 +45,26 @@ using prd = pair<double,double>;
 #define eb emplace_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 2005
+#define LARGE 200001
 #define COMPILE false
 #define TESTTIME false
+#define MODNUM 1000000007
 
 // define initial parameters here
 int T = 0;
-int N;
-ll X[LARGE], Y[LARGE], Z[LARGE], R[LARGE];
-ll bd[4][3];
-
-ll cmp_dis(ll lb, ll* a, int rk) {
-  ll l = abs(a[rk] + R[rk] - lb);
-  ll r = abs(a[rk] - R[rk] - lb);
-  ll lmx = max(l, r);
-  return lmx;
-}
-
-ll loop(tpl a, tpl b) {
-  ll ax, ay, az, bx, by, bz;
-  tie(ax, ay, az) = a;
-  tie(bx, by, bz) = b;
-  ll mx, my, mz;
-  ll res = 0;
-  inc (i, 1, N + 1) {
-    mx = cmp_dis(ax, X, i);
-    my = cmp_dis(ay, Y, i);
-    mz = cmp_dis(az, Z, i);
-    ll lr = max(mx, max(my, mz));
-    mx = cmp_dis(bx, X, i);
-    my = cmp_dis(by, Y, i);
-    mz = cmp_dis(bz, Z, i);
-    ll rr = max(mx, max(my, mz));
-    res = max(res, min(lr, rr));
-  }
-  return res;
-}
+int N, K[LARGE];
 
 ll solve() {
-  // find boundary
-  inc (i, 1, 4) inc (j, 1, 3) {
-    if (j == 1) bd[i][j] = INT_MAX;
-    else bd[i][j] = INT_MIN;
-  }
+  ll d = 1, r = 0;
   inc (i, 1, N + 1) {
-    bd[1][1] = min(bd[1][1], X[i] - R[i]);
-    bd[1][2] = max(bd[1][2], X[i] + R[i]);
-    bd[2][1] = min(bd[2][1], Y[i] - R[i]);
-    bd[2][2] = max(bd[2][2], Y[i] + R[i]);
-    bd[3][1] = min(bd[3][1], Z[i] - R[i]);
-    bd[3][2] = max(bd[3][2], Z[i] + R[i]);
+    r += d * (K[i] - K[N - i + 1]);
+    PR(r);
+    r %= MODNUM;
+    PR(r);
+    d <<= 1;
+    d %= MODNUM;
   }
-  ll res = INT_MAX;
-  inc (i, 1, 3) inc (j, 1, 3) {
-    res = min(res, 
-              loop(mt(bd[1][1], bd[2][i], bd[3][j]),
-                   mt(bd[1][2], bd[2][3 - i], bd[3][3 - j])));
-  }
-  return res;
+  return (r < 0) ? r + MODNUM : r;
 }
 
 int main(int argc, char** argv) {
@@ -119,11 +81,11 @@ int main(int argc, char** argv) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
     scanf("%d", &N);
-    inc (j, 1, N + 1) cin >> X[j] >> Y[j] >> Z[j] >> R[j];
-    ll r = solve();
+    inc (j, 1, N + 1) scanf("%d", &K[j]);
+    ll res = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: %lld\n", i, r);
+    printf("Case #%d: %lld\n", i, res);
   }
   return 0;
 }
