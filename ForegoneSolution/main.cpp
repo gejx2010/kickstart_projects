@@ -36,9 +36,9 @@ using prd = pair<double,double>;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
 #define PRV(x) cerr << #x << ": "; for (auto& x##_it: x) cerr << x##_it << ' '; cerr << endl;
 #define debug(...) fprintf(stderr, __VA_ARGS__)
-#define rep(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define inc(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define dec(i,a,b) for (decltype(a + 0) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
+#define rep(i,a,b) for (decltype(b) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define inc(i,a,b) for (decltype(b) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define dec(i,a,b) for (decltype(a) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
 #define mp make_pair
 #define mt make_tuple
 #define pb push_back
@@ -51,7 +51,23 @@ using prd = pair<double,double>;
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+ll N, A, B;
+
+void solve() {
+  A = 0, B = 0;
+  ll n = N, r = 0, c = 1;
+  while (n) {
+    r = n % 10;
+    if (r == 4) {
+      A += c << 1;
+      B += c << 1;
+    } else {
+      B += r * c;
+    }
+    n /= 10;
+    c *= 10;
+  }
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -66,9 +82,11 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%lld", &N);
+    solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %lld %lld\n", i, A, B);
   }
   return 0;
 }

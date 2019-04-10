@@ -36,22 +36,45 @@ using prd = pair<double,double>;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
 #define PRV(x) cerr << #x << ": "; for (auto& x##_it: x) cerr << x##_it << ' '; cerr << endl;
 #define debug(...) fprintf(stderr, __VA_ARGS__)
-#define rep(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define inc(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define dec(i,a,b) for (decltype(a + 0) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
+#define rep(i,a,b) for (decltype(b) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define inc(i,a,b) for (decltype(b) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define dec(i,a,b) for (decltype(a) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
 #define mp make_pair
 #define mt make_tuple
 #define pb push_back
 #define eb emplace_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 200001
+#define LARGE 201
+#define EPSILON 1e-12
 #define COMPILE false
-#define TESTTIME false
+#define TESTTIME true
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+int M;
+ll C[LARGE];
+
+ld cmp(ld m) {
+  ld r = 0.0;
+  inc (i, 0, M + 1) {
+    r *= m;
+    r += C[i];
+  }
+  return r;
+}
+
+ld solve() {
+  ld d = 0.0, u = 2.0, m;
+  PR(cmp(d));
+  PR(cmp(u));
+  while (EPSILON < u - d) {
+    m = (d + u) / 2.0;
+    if (cmp(m) < 0.0) u = m;
+    else d = m;
+  }
+  return u - 1.0;
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -66,9 +89,13 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%d", &M);
+    inc (j, 0, M + 1) scanf("%lld", &C[j]);
+    C[0] = -C[0];
+    ld r = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %.10llf\n", i, r);
   }
   return 0;
 }

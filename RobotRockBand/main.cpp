@@ -36,22 +36,52 @@ using prd = pair<double,double>;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
 #define PRV(x) cerr << #x << ": "; for (auto& x##_it: x) cerr << x##_it << ' '; cerr << endl;
 #define debug(...) fprintf(stderr, __VA_ARGS__)
-#define rep(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define inc(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define dec(i,a,b) for (decltype(a + 0) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
+#define rep(i,a,b) for (decltype(b) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define inc(i,a,b) for (decltype(b) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define dec(i,a,b) for (decltype(a) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
 #define mp make_pair
 #define mt make_tuple
 #define pb push_back
 #define eb emplace_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 200001
+#define LARGE 2005
+#define OLARGE 2000005
+#define SMALL 5
 #define COMPILE false
 #define TESTTIME false
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+int N;
+ll K;
+ll A[SMALL][LARGE];
+map<ll, ll> U, D;
+
+ll solve() {
+  U.clear(), D.clear();
+  // cmp U & D
+  inc (i, 1, N + 1) inc (j, 1, N + 1) {
+    ll a = (A[1][i] ^ A[2][j]);
+    if (U.count(a)) U[a] += 1;
+    else U[a] = 1;
+  }
+
+  inc (i, 1, N + 1) inc (j, 1, N + 1) {
+    ll a = (A[3][i] ^ A[4][j]);
+    if (D.count(a)) D[a] += 1;
+    else D[a] = 1;
+  }
+
+  // compute U ^ D
+  ll res = 0;
+  for (auto v: U) {
+    ll n = v.first, c = v.second;
+    ll k = K ^ n;
+    if (D.count(k)) res += c * D[k];
+  }
+  return res;
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -66,9 +96,12 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%d %lld", &N, &K);
+    inc (j, 1, SMALL) inc (k, 1, N + 1) scanf("%lld", &A[j][k]);
+    ll r = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %lld\n", i, r);
   }
   return 0;
 }

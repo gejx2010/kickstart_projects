@@ -32,12 +32,12 @@ typedef vector<pri> vtpi;
 
 using prd = pair<double,double>;
 
-#define PR(x) cerr << #x << ": " << (x) << endl;
+#define PR(x) cout << #x << ": " << (x) << endl;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
-#define PRV(x) cerr << #x << ": "; for (auto& x##_it: x) cerr << x##_it << ' '; cerr << endl;
+#define PRV(x) cout << #x << ": "; for (auto& x##_it: x) cout << x##_it << ' '; cout << endl;
 #define debug(...) fprintf(stderr, __VA_ARGS__)
 #define rep(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define inc(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define inc(i,a,b) for (decltype(b + 0) i = a, i##_end_ = b; i < i##_end_; ++i)
 #define dec(i,a,b) for (decltype(a + 0) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
 #define mp make_pair
 #define mt make_tuple
@@ -45,13 +45,77 @@ using prd = pair<double,double>;
 #define eb emplace_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 200001
+#define LARGE 201
 #define COMPILE false
-#define TESTTIME false
+#define TESTTIME true
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+ll M, N;
+ll K[LARGE], L[LARGE];
+ll A[LARGE][LARGE];
+ll C[LARGE][LARGE];
+ll DC[LARGE][LARGE];
+vector<ll> vp;
+ll cc, ca;
+
+void init() {
+  inc (i, 1, N + 1) {
+    DC[i][L[i]] = 0;
+    inc (j, L[i] + 1, K[i] + 1) {
+      DC[i][j] = DC[i][j - 1] + C[i][j - 1];
+    }
+  }
+}
+
+ll select() {
+  ll rv = 0, ra = 0;
+  inc (i, 1, N + 1) {
+    rv += DC[i][vp[i]];
+    ra += A[i][vp[i]];
+  }
+  //PR(rv);
+  //PR(ra);
+  if (rv <= M) return ra;
+  return 0;
+}
+
+void tnext() {
+  inc (i, 1, N + 1) {
+    if (vp[i] < K[i] && cc < M) {
+      cc += C[i][vp[i]];
+      ca += A[i][vp[i] + 1] - A[i][vp[i]];
+      ++vp[i];
+      break;
+    } else {
+      cc -= DC[i][vp[i]];
+      ca -= A[i][vp[i]] - A[i][L[i]];
+      vp[i] = L[i];
+    }
+  }
+}
+
+bool finish() {
+  inc (i, 1, N + 1) if (vp[i] != L[i]) return false;
+  return true;
+}
+
+ll solve() {
+  init();
+  vp.clear();
+  vp.pb(0);
+  inc (i, 1, N + 1) vp.pb(L[i]);
+  ll r = select();
+  cc = 0, ca = r;
+  //PR(r);
+  tnext();
+  while (!finish()) {
+    //PRV(vp);
+    if (cc <= M) r = max(r, ca);
+    tnext();
+  }
+  return r;
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -66,9 +130,16 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%lld %lld", &M, &N);
+    inc (j, 1, N + 1) {
+      scanf("%lld %lld", &K[j], &L[j]);
+      inc (k, 1, K[j] + 1) scanf("%lld", &A[j][k]);
+      inc (k, 1, K[j]) scanf("%lld", &C[j][k]);
+    }
+    ll r = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %lld\n", i, r);
   }
   return 0;
 }
