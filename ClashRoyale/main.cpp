@@ -127,6 +127,7 @@ ll solve() {
   memset(DP, 0, sizeof DP);
   ll res = 0;
   inc (i, 1, N + 1) {
+    DP[i][0] = max(DP[i - 1][0], A[i][L[i]]);
     inc (j, 1, MLARGE - 1) {
       DP[i][j] = max(DP[i][j], DP[i][j - 1]); 
       inc (k, L[i], K[i] + 1) {
