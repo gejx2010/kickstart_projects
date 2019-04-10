@@ -35,6 +35,7 @@ using prd = pair<double,double>;
 #define PR(x) cout << #x << ": " << (x) << endl;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
 #define PRV(x) cout << #x << ": "; for (auto& x##_it: x) cout << x##_it << ' '; cout << endl;
+#define PRM(x) cout << #x << ": "; for (auto& x##_it: x) cout << (x##_it).first << ": " << (x##_it).second << endl; cout << endl;
 #define debug(...) fprintf(stdout, __VA_ARGS__)
 #define rep(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
 #define inc(i,a,b) for (decltype(b + 0) i = a, i##_end_ = b; i < i##_end_; ++i)
@@ -46,6 +47,7 @@ using prd = pair<double,double>;
 #define gel(x,i) get<(i)>(x)
 
 #define LARGE 201
+#define COM 8
 #define MLARGE 10005
 #define SMALL 20
 #define COMPILE false
@@ -63,6 +65,12 @@ ll cc, ca;
 
 // solve2
 ll DP[SMALL][MLARGE];
+
+// solve3
+map<ll, ll> DMA;
+map<ll, ll> DMB;
+map<ll, ll> DMC;
+map<ll, ll> DMM[SMALL][SMALL][SMALL];
 
 void init() {
   inc (i, 1, N + 1) {
@@ -122,7 +130,7 @@ ll solve2() {
   return r;
 }
 
-ll solve() {
+ll solve3() {
   init();
   memset(DP, 0, sizeof DP);
   ll res = 0;
@@ -138,6 +146,94 @@ ll solve() {
     }
   }
   return res;
+}
+
+void try_insert(map<ll, ll>& m, ll k, ll v) {
+  if (M < k) return;
+  if (!m.count(k)) m[k] = v;
+  else m[k] = max(m[k], v);
+}
+
+void get_before(map<ll, ll>& m) {
+  ll bf = 0;
+  for (auto u: m) {
+    ll c = u.first, a = u.second;
+    m[c] = max(a, bf);
+    bf = m[c];
+  }
+}
+
+map<ll, ll> merge(map<ll, ll>& ma, map<ll,ll>& mb) {
+  if (ma.empty()) return mb;
+  if (mb.empty()) return ma;
+  // merge a + b
+  map<ll, ll> m;
+  for (auto u: ma) {
+    ll c = u.first, a = u.second;
+    for (auto v: mb) {
+      ll vc = v.first, va = v.second;
+      try_insert(m, vc + c, va + a);
+    }
+  }
+  // get before to next
+  get_before(m);
+  return m;
+}
+
+map<ll, ll> mgs(ll st, ll ed, ll n) {
+  //debug("mgs (start, ed, n): (%lld, %lld, %lld)\n", st, ed, n);
+  if (!DMM[st][ed][n].empty()) return DMM[st][ed][n];
+  map<ll, ll> m;
+  if (n == 0) {
+    DMM[st][ed][n] = m;
+    return m;
+  }
+  if (n == 1) {
+    inc (i, st, ed + 1) 
+      inc (j, L[i], K[i] + 1) 
+        try_insert(m, DC[i][j], A[i][j]);
+    //debug("case n is 1.\n");
+    //PRM(m);
+    DMM[st][ed][n] = m;
+    return m;
+  }
+  ll md = (st + ed) >> 1;
+  ll lb = md - st + 1, rb = ed - md;
+  inc (i, 0, lb + 1) { 
+    if (n - i < 0) continue;
+    if (rb < n - i) continue;
+    auto ma = mgs(st, md, i);
+    auto mb = mgs(md + 1, ed, n - i);
+    //debug("case n is not 1.\n");
+    map<ll, ll> cm = merge(ma, mb);
+    //PRM(cm);
+    for (auto u: cm) 
+      try_insert(m, u.first, u.second);
+  }
+  get_before(m);
+  DMM[st][ed][n] = m;
+  return m;
+}
+
+ll solve() {
+  init();
+  // clear dmm
+  inc (i, 1, SMALL) inc (j, 1, SMALL) inc(k, 1, SMALL) DMM[i][j][k].clear();
+  ll m = (1 + N) >> 1; 
+  ll r = 0;
+  inc (i, COM - (N - m), m + 1) {
+    DMA.clear();
+    DMB.clear();
+    DMA = mgs(1, m, i);
+    DMB = mgs(m + 1, N, COM - i);
+    for (auto u: DMA) {
+      ll c = u.first, a = u.second;
+      auto it = DMB.upper_bound(M - c);
+      --it;
+      r = max(r, a + it->second);
+    }
+  }
+  return r;
 }
 
 int main(int argc, char** argv) {
