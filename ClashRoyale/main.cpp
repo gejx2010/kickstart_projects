@@ -33,7 +33,7 @@ typedef vector<pri> vtpi;
 using prd = pair<double,double>;
 
 #define PR(x) cout << #x << ": " << (x) << endl;
-#define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
+#define PRA(x,sz) cout << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cout << (x)[x##_it] << " "; cout << endl;
 #define PRV(x) cout << #x << ": "; for (auto& x##_it: x) cout << x##_it << ' '; cout << endl;
 #define PRM(x) cout << #x << ": "; for (auto& x##_it: x) cout << (x##_it).first << ": " << (x##_it).second << endl; cout << endl;
 #define debug(...) fprintf(stdout, __VA_ARGS__)
@@ -49,6 +49,7 @@ using prd = pair<double,double>;
 #define LARGE 201
 #define COM 8
 #define MLARGE 10005
+#define GLARGE 1000005
 #define SMALL 20
 #define COMPILE false
 #define TESTTIME true
@@ -71,6 +72,13 @@ map<ll, ll> DMA;
 map<ll, ll> DMB;
 map<ll, ll> DMC;
 map<ll, ll> DMM[SMALL][SMALL][SMALL];
+
+// solve4
+ll mask[COM << 1];
+prl AMA[GLARGE];
+prl AMB[GLARGE];
+prl AMC[GLARGE];
+ll AMAZ, AMBZ;
 
 void init() {
   inc (i, 1, N + 1) {
@@ -182,19 +190,16 @@ map<ll, ll> merge(map<ll, ll>& ma, map<ll,ll>& mb) {
 
 map<ll, ll> mgs(ll st, ll ed, ll n) {
   //debug("mgs (start, ed, n): (%lld, %lld, %lld)\n", st, ed, n);
-  if (!DMM[st][ed][n].empty()) return DMM[st][ed][n];
   map<ll, ll> m;
   if (n == 0) {
-    DMM[st][ed][n] = m;
     return m;
   }
   if (n == 1) {
     inc (i, st, ed + 1) 
       inc (j, L[i], K[i] + 1) 
-        try_insert(m, DC[i][j], A[i][j]);
+        try_insert(m, DC[mask[i]][j], A[mask[i]][j]);
     //debug("case n is 1.\n");
     //PRM(m);
-    DMM[st][ed][n] = m;
     return m;
   }
   ll md = (st + ed) >> 1;
@@ -211,11 +216,10 @@ map<ll, ll> mgs(ll st, ll ed, ll n) {
       try_insert(m, u.first, u.second);
   }
   get_before(m);
-  DMM[st][ed][n] = m;
   return m;
 }
 
-ll solve() {
+ll solve4() {
   init();
   // clear dmm
   inc (i, 1, SMALL) inc (j, 1, SMALL) inc(k, 1, SMALL) DMM[i][j][k].clear();
@@ -230,6 +234,107 @@ ll solve() {
       ll c = u.first, a = u.second;
       auto it = DMB.upper_bound(M - c);
       --it;
+      r = max(r, a + it->second);
+    }
+  }
+  return r;
+}
+
+bool detect(ll n) {
+  int rk = 0, cr = 1;
+  while (n) {
+    if (n & 1) mask[++rk] = cr;
+    n >>= 1;
+    ++cr;
+  }
+  if (rk == COM) return true;
+  return false;
+}
+
+void swap(prl* ar, ll f, ll g) {
+  auto m = ar[f];
+  ar[f] = ar[g];
+  ar[g] = m;
+}
+
+void sort_dup(prl* ar, ll& arz, ll st, ll ed) {
+  sort(ar + st, ar + ed);
+  ll bc = ar[st].first, bv = ar[st].second;
+  ll rk = st;
+  inc (i, st, ed) {
+    ll c = ar[i].first;
+    if (c != bc) {
+      if (rk != i - 1) 
+        std::swap(ar[rk], ar[i - 1]);
+      ar[rk].second = max(ar[rk].second, bv);
+      bv = ar[rk].second;
+      ++rk;
+    }
+    bc = c;
+  }
+  std::swap(ar[rk], ar[ed - 1]);
+  ar[rk].second = max(ar[rk].second, bv);
+  arz = rk + 1 - st;
+}
+
+void merge(prl* ar, ll& arz, ll f, ll fz, ll g, ll gz) {
+  ll sz = 0;
+  inc (i, f, f + fz) inc (j, g, g + gz) {
+    if (ar[i].first + ar[j].first <= M) AMC[sz++] = {ar[i].first + ar[j].first, ar[i].second + ar[j].second};
+  }
+  inc (i, f, f + sz) ar[i] = AMC[i - f];
+  // sort & duplicate
+  sort_dup(ar, arz, f, f + sz); 
+}
+
+void mgss(ll st, ll ed, ll n, prl* ar, ll& arz, ll ast, ll aed) {
+  //debug("mgs (start, ed, n): (%lld, %lld, %lld)\n", st, ed, n);
+  //PR(ast);
+  //PR(aed);
+  if (n == 0) {
+    return;
+  }
+  if (n == 1) {
+    ll f = ast;
+    inc (i, st, ed + 1) {
+      inc (j, L[mask[i]], K[mask[i]] + 1) {
+        if (DC[mask[i]][j] <= M) ar[f++] = {DC[mask[i]][j], A[mask[i]][j]};
+      }
+    }
+    sort_dup(ar, arz, ast, f);
+    //inc (i, ast, f) debug("ar[%d]: (%d, %d)\n", i, ar[i].first, ar[i].second);
+    return;
+  }
+  ll md = (st + ed) >> 1;
+  ll lb = md - st + 1, rb = ed - md;
+  ll mv = (ast + aed) >> 1;
+  ll maz = 0, mbz = 0;
+  mgss(st, md, lb, ar, maz, ast, mv);
+  mgss(md + 1, ed, rb, ar, mbz, mv, aed);
+  merge(ar, arz, ast, maz, mv, mbz);
+  //inc (i, ast, ast + arz) debug("ar[%d]: (%d, %d)\n", i, ar[i].first, ar[i].second);
+  return;
+}
+
+ll solve() {
+  init();
+  ll m = COM >> 1; 
+  ll r = 0;
+  ll ini = (1 << COM) - 1;
+  ll last = (((1 << COM) - 1) << (N - COM)) + 1;
+  ll cnt = 0;
+  inc (i, ini, last) {
+    if (!detect(i)) continue;
+    AMAZ = 0;
+    AMBZ = 0;
+    mgss(1, m, m, AMA, AMAZ, 0, GLARGE - 1);
+    mgss(m + 1, COM, COM - m, AMB, AMBZ, 0, GLARGE - 1);
+    inc (j, 0, AMAZ) {
+      ll c = AMA[j].first, a = AMA[j].second;
+      prl k = {M - c, LLONG_MAX};
+      auto it = upper_bound(AMB, AMB + AMBZ, k);
+      --it;
+      if (AMB + AMBZ <= it) PR("wrong index");
       r = max(r, a + it->second);
     }
   }
