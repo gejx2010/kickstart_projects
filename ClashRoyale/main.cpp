@@ -35,7 +35,7 @@ using prd = pair<double,double>;
 #define PR(x) cout << #x << ": " << (x) << endl;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
 #define PRV(x) cout << #x << ": "; for (auto& x##_it: x) cout << x##_it << ' '; cout << endl;
-#define debug(...) fprintf(stderr, __VA_ARGS__)
+#define debug(...) fprintf(stdout, __VA_ARGS__)
 #define rep(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
 #define inc(i,a,b) for (decltype(b + 0) i = a, i##_end_ = b; i < i##_end_; ++i)
 #define dec(i,a,b) for (decltype(a + 0) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
@@ -46,6 +46,8 @@ using prd = pair<double,double>;
 #define gel(x,i) get<(i)>(x)
 
 #define LARGE 201
+#define MLARGE 10005
+#define SMALL 20
 #define COMPILE false
 #define TESTTIME true
 
@@ -58,6 +60,9 @@ ll C[LARGE][LARGE];
 ll DC[LARGE][LARGE];
 vector<ll> vp;
 ll cc, ca;
+
+// solve2
+ll DP[SMALL][MLARGE];
 
 void init() {
   inc (i, 1, N + 1) {
@@ -100,7 +105,7 @@ bool finish() {
   return true;
 }
 
-ll solve() {
+ll solve2() {
   init();
   vp.clear();
   vp.pb(0);
@@ -117,6 +122,23 @@ ll solve() {
   return r;
 }
 
+ll solve() {
+  init();
+  memset(DP, 0, sizeof DP);
+  ll res = 0;
+  inc (i, 1, N + 1) {
+    inc (j, 1, MLARGE - 1) {
+      DP[i][j] = max(DP[i][j], DP[i][j - 1]); 
+      inc (k, L[i], K[i] + 1) {
+        if (DC[i][k] <= j) DP[i][j] = max(DP[i][j], A[i][k] + DP[i - 1][j - DC[i][k]]);
+      }
+      //debug("DP[%d][%d]: %lld\n", i, j, DP[i][j]);
+      if (j <= M) res = max(res, DP[i][j]);
+    }
+  }
+  return res;
+}
+
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
   string def_ofn = "large.out";
@@ -130,6 +152,11 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    //init
+    memset(A, 0, sizeof A);
+    memset(C, 0, sizeof C);
+    memset(K, 0, sizeof K);
+    memset(L, 0, sizeof L);
     scanf("%lld %lld", &M, &N);
     inc (j, 1, N + 1) {
       scanf("%lld %lld", &K[j], &L[j]);
