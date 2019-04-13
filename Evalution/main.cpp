@@ -32,9 +32,9 @@ typedef vector<pri> vtpi;
 
 using prd = pair<double,double>;
 
-#define PR(x) cerr << #x << ": " << (x) << endl;
-#define PRA(x,sz) cerr << #x << ": " << endl; for (int xit = 0; xit < (sz); ++(xit)) cerr << (x)[xit] << " "; cerr << endl;
-#define PRV(x) cerr << #x << ": "; for (auto& xit: x) cerr << xit << ' '; cerr << endl;
+#define PR(x) cout << #x << ": " << (x) << endl;
+#define PRA(x,sz) cerr << #x << ": " << endl; for (int x##_it = 0; x##_it < (sz); ++(x##_it)) cerr << (x)[x##_it] << " "; cerr << endl;
+#define PRV(x) cout << #x << ": "; for (auto& it: x) cout << it << ' '; cout << endl;
 #define PRM(x) cout << #x << ": " << endl; for (auto& xit: x) cout << (xit).first << ": " << (xit).second << endl; cout << endl;
 #define debug(...) fprintf(stderr, __VA_ARGS__)
 #define rep(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
@@ -46,13 +46,74 @@ using prd = pair<double,double>;
 #define eb emplace_back
 #define gel(x,i) get<(i)>(x)
 
-#define LARGE 200001
+#define LARGE 2001
 #define COMPILE false
-#define TESTTIME false
+#define TESTTIME true
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+int N;
+string V[LARGE];
+map<string, vector<string>> eqa;
+map<string, bool> vrm;
+
+bool search() {
+  bool upd = true;
+  while (upd) {
+    upd = false;
+    for (auto v: eqa) {
+      auto s = v.first;
+      auto val = v.second;
+      if (vrm[s]) continue;
+      if (val.empty()) {
+        vrm[s] = upd = true;
+        continue;
+      }
+      bool can = true;
+      for (auto n: val) 
+        if (!vrm[n]) can = false;
+      if (can) vrm[s] = upd = true;
+    } 
+  }
+  for (auto n: vrm) if (!n.second) return false;
+  return true;
+}
+
+string solve() {
+  eqa.clear();
+  vrm.clear();
+  // get string
+  inc (i, 1, N + 1) {
+    string s, cs;
+    vector<string> ss;
+    for (int j = 0; V[i][j] != '\0'; ++j) {
+      if (V[i][j] == '=') {
+        cs = s;
+        vrm[s] = false;
+        s = "";
+      } else if (V[i][j] == ',') {
+        ss.pb(s);
+        vrm[s] = false;
+        s = "";
+      } else if (V[i][j] == ')' && (!s.empty())) {
+        vrm[s] = false;
+        ss.pb(s);
+        s = "";
+      } else if (V[i][j] == '(') {
+        s = "";
+      } else {
+        s += V[i][j];
+      }
+    }
+    eqa[cs] = ss;
+    //PR(cs);
+    //PRV(eqa[cs]);
+  }
+  //PRM(vrm);
+  bool r = search();
+  if (r) return "GOOD";
+  else return "BAD";
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -67,9 +128,12 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    cin >> N;
+    inc (i, 1, N + 1) cin >> V[i];
+    string r = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %s\n", i, r.c_str());
   }
   return 0;
 }
