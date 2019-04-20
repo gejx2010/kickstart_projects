@@ -56,6 +56,7 @@ ll N, M;
 ll F[LARGE][LARGE];
 ll ST[LARGE];
 ll DLT[LARGE];
+ll DP[LARGE][3];
 
 void init() {
   // cmp N!
@@ -77,14 +78,18 @@ void init() {
 
 ll solve() {
   // cmp F(i, j)
-  inc (i, 2, N + 1) {
-    inc (j, 2, i + 1) {
-      ll s = 0;
-      inc (k, 1, i - j + 2) {
-        ll v = (DLT[k] * F[i - k][j - 1]) % M;
-        s = (s + v) % M;
-      }
-      F[i][j] = s;
+  memset(DP, 0, sizeof DP);
+  DP[0][0] = 1 % M;
+  DP[0][1] = 0;
+  DP[0][2] = 0;
+  inc (i, 1, N + 1) {
+    inc (j, 1, i + 1) {
+      DP[i][0] += (DLT[j] * DP[i - j][0]) % M;
+      DP[i][0] %= M;
+      DP[i][1] += ((DP[i - j][0] + DP[i - j][1]) * DLT[j]) % M;
+      DP[i][1] %= M;
+      DP[i][2] += ((DP[i - j][0] + 2 * DP[i - j][1] + DP[i - j][2]) * DLT[j]) % M;
+      DP[i][2] %= M;
     }
   }
   // detect
@@ -97,16 +102,7 @@ ll solve() {
     //debug("sum is: %lld\n", s);
     //debug("n per is: %lld\n", ST[i]);
   }
-  // cmp ans
-  ll r = 0;
-  inc (i, 1, N + 1) {
-    //PR(i);
-    //PR(F[N][i]);
-    ll v = (F[N][i] * i) % M;
-    v = (v * i) % M;
-    r = (r + v) % M;
-  }
-  return r;
+  return DP[N][2];
 }
 
 int main(int argc, char** argv) {

@@ -49,11 +49,24 @@ using prd = pair<double,double>;
 #define LARGE 200001
 #define COMPILE false
 #define TESTTIME false
-#define MOD 1000000007
 
 // define initial parameters here
 int T = 0;
-int ini[LARGE], sum[LARGE];
+int R, C;
+
+int solve() {
+  int lr = R % 3, mr = R / 3;
+  int lc = C % 3, mc = C / 3;
+  int dn = lr + (mr << 1);
+  int dc = lc + (mc << 1);
+  if (C < 3) return dn * C;
+  if (R < 3) return dc * R;
+  int fd = 2 * R;
+  if (lc == 0) return mc * fd;
+  if (lc == 1) return dn + mc * fd;
+  if (lr == 2) return (dn << 1) + mc * fd - 1;
+  return (dn << 1) + mc * fd;
+}
 
 int main(int argc, char** argv) {
   string def_ifn = "large.in";
@@ -68,9 +81,11 @@ int main(int argc, char** argv) {
   while (i++ < T) {
     clock_t st = clock();
     if (TESTTIME) cerr << "Within Case " << i << ".\n";
+    scanf("%d %d", &R, &C);
+    int r = solve();
     clock_t rt = clock();
     if (TESTTIME) cerr << "Solve case takes time:" << ((float)(rt - st)) / CLOCKS_PER_SEC << " seconds.\n";
-    printf("Case #%d: \n", i);
+    printf("Case #%d: %d\n", i, r);
   }
   return 0;
 }
