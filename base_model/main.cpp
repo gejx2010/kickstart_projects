@@ -37,14 +37,16 @@ using prd = pair<double,double>;
 #define PRV(x) cerr << #x << ": "; for (auto& xit: x) cerr << xit << ' '; cerr << endl;
 #define PRM(x) cout << #x << ": " << endl; for (auto& xit: x) cout << (xit).first << ": " << (xit).second << endl; cout << endl;
 #define debug(...) fprintf(stderr, __VA_ARGS__)
-#define rep(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define inc(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define dec(i,a,b) for (decltype(a + 0) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
+#define rep(i,a,b) for (decltype((b) + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define inc(i,a,b) for (decltype((b) + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define dec(i,a,b) for (decltype((a) + 0) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
 #define mp make_pair
 #define mt make_tuple
 #define pb push_back
 #define eb emplace_back
 #define gel(x,i) get<(i)>(x)
+#define lch(x) ((x) << 1)
+#define rch(x) (((x) << 1) + 1)
 
 #define LARGE 200001
 #define COMPILE false

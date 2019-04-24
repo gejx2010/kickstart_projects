@@ -36,19 +36,22 @@ using prd = pair<double,double>;
 #define PRA(x,sz) cerr << #x << ": " << endl; for (int xit = 0; xit < (sz); ++(xit)) cerr << (x)[xit] << " "; cerr << endl;
 #define PRV(x) cerr << #x << ": "; for (auto& xit: x) cerr << xit << ' '; cerr << endl;
 #define PRM(x) cout << #x << ": " << endl; for (auto& xit: x) cout << (xit).first << ": " << (xit).second << endl; cout << endl;
-#define debug(...) fprintf(stderr, __VA_ARGS__)
-#define rep(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define inc(i,a,b) for (decltype(b + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
-#define dec(i,a,b) for (decltype(a + 0) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
+#define debug(...) fprintf(stdout, __VA_ARGS__)
+#define rep(i,a,b) for (decltype((b) + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define inc(i,a,b) for (decltype((b) + 0) i = (a), i##_end_ = (b); i < i##_end_; ++i)
+#define dec(i,a,b) for (decltype((a) + 0) i = (a), i##_end_ = (b); i##_end_ <= i; --i)
 #define mp make_pair
 #define mt make_tuple
 #define pb push_back
 #define eb emplace_back
 #define gel(x,i) get<(i)>(x)
+#define lch(x) ((x) << 1)
+#define rch(x) (((x) << 1) + 1)
 
+#define SMALL 20
 #define LARGE 200001
 #define COMPILE false
-#define TESTTIME false
+#define TESTTIME true
 #define MOD 1000000007
 
 // define initial parameters here
@@ -58,6 +61,9 @@ int A[LARGE];
 int sum;
 int arr[LARGE];
 queue<int> pos[LARGE];
+vi vpos[LARGE];
+pri dp[SMALL][LARGE];
+int ht;
 
 int solve2() {
   memset(arr, 0, sizeof arr);
@@ -109,7 +115,7 @@ int solve3() {
   return res;
 }
 
-int solve() {
+int solve4() {
   memset(arr, 0, sizeof arr);
   sum = 0;
   inc (i, 1, N + 1) {
@@ -143,6 +149,72 @@ int solve() {
     }
   }
   return res;
+}
+
+void build_tree(int lx, int num) {
+  if (num <= 1) {
+    ht = lx;
+    return;
+  }
+  inc (i, 0, (num + 1) >> 1) {
+    int s = dp[lx][lch(i)].first + dp[lx][rch(i)].first;
+    int ss = max(dp[lx][lch(i)].second, dp[lx][lch(i)].first + dp[lx][rch(i)].second);
+    dp[lx + 1][i] = {s, ss};
+  }
+  build_tree(lx + 1, (num + 1) >> 1);
+}
+
+void update_tree(int lx, int bd, int n) {
+  if (lx == ht) return;
+  int fn = n >> 1;
+  if (lch(fn) < bd) {
+    dp[lx + 1][fn] = dp[lx][n];
+  } else {
+    int s = dp[lx][lch(fn)].first + dp[lx][rch(fn)].first;
+    int ss = max(dp[lx][lch(fn)].second, dp[lx][lch(fn)].first + dp[lx][rch(fn)].second);
+    dp[lx + 1][fn] = {s, ss};
+  }
+  update_tree(lx + 1, bd >> 1, n >> 1);
+}
+
+int solve() {
+  memset(dp, 0, sizeof dp);
+  // clean vpos
+  inc (i, 1, N + 1) vpos[i].clear();
+  // set first line
+  inc (i, 1, N + 1) {
+    int v = 0;
+    if (vpos[A[i]].size() < S) v = 1;
+    else if (vpos[A[i]].size() == S) v = -S;
+    dp[0][i - 1] = {v, v};
+    vpos[A[i]].pb(i - 1);
+  }
+  // setup up tree
+  build_tree(0, N);
+  // travel from left to right
+  int r = 1;
+  inc (i, 1, N + 1) {
+    r = max(r, dp[ht][0].second);
+    if (r < N) {
+      // verify bound
+      update_tree(0, i, i);
+      // update tree
+      int n = A[i];
+      auto it = lower_bound(vpos[n].begin(), vpos[n].end(), i - 1);
+      int lit = it - vpos[n].begin();
+      int nit = lit + S;
+      if (nit < vpos[n].size()) {
+        dp[0][vpos[n][nit]] = {1, 1};
+        update_tree(0, i, vpos[n][nit]);
+      }
+      ++nit;
+      if (nit < vpos[n].size()) {
+        dp[0][vpos[n][nit]] = {-S, -S};
+        update_tree(0, i, vpos[n][nit]);
+      }
+    }
+  }
+  return r;
 }
 
 int main(int argc, char** argv) {
