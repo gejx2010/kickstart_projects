@@ -6,3 +6,4 @@ test_bound
 heap_sort
 heap_sort.cpp
 test_bound.cpp
+*.swp

@@ -1,3 +1,9 @@
+/***************************************
+Author: spgoal
+Date: Wed, Apr/24/2019, 18:51:03
+Lang: C++
+***************************************/
+
 #include <iostream>
 #include <cstdio>
 #include <cstring>
